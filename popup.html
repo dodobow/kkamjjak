@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>도파민 버튼</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">금지된 확장 장치</p>
+          <h1 id="appName">도파민 버튼</h1>
+        </div>
+        <span class="badge">MV3</span>
+      </header>
+
+      <p id="appDescription" class="description">누르면 무슨 일이 일어날지 모릅니다.</p>
+
+      <section class="button-zone" aria-label="메인 버튼">
+        <button id="mainButton" class="danger-button" type="button">
+          누르지 마시오
+        </button>
+        <p id="cooldownText" class="cooldown-text">버튼 사용 가능</p>
+        <p id="statusText" class="status-text" role="status"></p>
+      </section>
+
+      <section class="progress-panel" aria-label="수집 진행률">
+        <div class="progress-head">
+          <span>수집 진행률</span>
+          <strong id="progressText">0 / 20 발견</strong>
+        </div>
+        <div class="progress-track">
+          <span id="progressFill"></span>
+        </div>
+        <div id="categoryProgress" class="category-progress"></div>
+      </section>
+
+      <section class="last-result" aria-label="최근 결과">
+        <p class="section-label">최근 결과</p>
+        <div id="lastResultText" class="last-result-box">
+          아직 버튼의 죄가 기록되지 않았습니다.
+        </div>
+      </section>
+
+      <button id="openCollectionButton" class="secondary-button" type="button">
+        도감 열기
+      </button>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

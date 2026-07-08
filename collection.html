@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>도감</title>
+    <link rel="stylesheet" href="collection.css">
+  </head>
+  <body>
+    <header class="collection-header">
+      <div>
+        <p class="eyebrow">수집 기록</p>
+        <h1 id="collectionTitle">도감</h1>
+        <p id="collectionDescription">버튼이 남긴 이상 현상을 보관합니다.</p>
+      </div>
+      <div class="summary">
+        <strong id="totalProgress">0 / 20</strong>
+        <span>발견</span>
+      </div>
+    </header>
+
+    <main class="collection-layout">
+      <aside class="stats-panel">
+        <h2>카테고리</h2>
+        <div id="categoryStats"></div>
+        <p id="statusText" class="status-text" role="status"></p>
+      </aside>
+
+      <section id="eventSections" class="event-sections" aria-label="이벤트 도감"></section>
+    </main>
+
+    <script type="module" src="collection.js"></script>
+  </body>
+</html>
