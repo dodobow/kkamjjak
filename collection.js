@@ -12,7 +12,12 @@ import {
   resetCollectionForDebug,
   unlockAllEventsForDebug
 } from "./src/storage.js";
-import { formatTimestamp, getCategoryStats, getEventById } from "./src/utils.js";
+import {
+  formatTimestamp,
+  getCategoryStats,
+  getEventById,
+  isScriptableUrl
+} from "./src/utils.js";
 
 const elements = {
   title: document.querySelector("#collectionTitle"),
@@ -24,14 +29,36 @@ const elements = {
 
 let collection = {};
 const pageParams = new URLSearchParams(location.search);
-const replayTargetTabId = Number(pageParams.get("targetTabId")) || null;
+let replayTargetTabId = Number(pageParams.get("targetTabId")) || null;
 
-function setStatus(message) {
+function setStatus(message, state = "info") {
   elements.statusText.textContent = message;
+  elements.statusText.dataset.state = message ? state : "idle";
 }
 
 function shouldShowDebugTools() {
   return DEV_SHOW_DEBUG_TOOLS || pageParams.get("debug") === "1";
+}
+
+async function resolveReplayTargetTabId() {
+  if (replayTargetTabId) {
+    try {
+      const tab = await chrome.tabs.get(replayTargetTabId);
+      if (isScriptableUrl(tab?.url)) return replayTargetTabId;
+    } catch (error) {
+      console.warn("stored replay target is unavailable", error);
+    }
+
+    replayTargetTabId = null;
+  }
+
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const targetTab = tabs
+    .filter((tab) => isScriptableUrl(tab.url))
+    .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))[0];
+
+  replayTargetTabId = targetTab?.id || null;
+  return replayTargetTabId;
 }
 
 function createDevUnlockedCollection(collectionData) {
@@ -64,6 +91,8 @@ function renderCategoryStats(stats) {
 }
 
 function renderDebugPanel() {
+  elements.categoryStats.querySelector(".debug-panel")?.remove();
+
   const panel = document.createElement("div");
   panel.className = "debug-panel";
   panel.innerHTML = `
@@ -141,7 +170,7 @@ async function replayEvent(eventId) {
   const entry = collection[eventId];
 
   if (!event) {
-    setStatus("이벤트를 찾을 수 없습니다.");
+    setStatus("이벤트를 찾을 수 없습니다.", "error");
     return;
   }
 
@@ -150,12 +179,22 @@ async function replayEvent(eventId) {
     return;
   }
 
-  setStatus(`${event.fullName} 재생 중...`);
+  const targetTabId = event.target === "page" ? await resolveReplayTargetTabId() : null;
+
+  if (event.target === "page" && !targetTabId) {
+    setStatus("재생할 일반 웹페이지 탭을 찾지 못했습니다.", "error");
+    return;
+  }
+
+  setStatus(`${event.fullName} 재생 중...`, "loading");
   const result = await executeEventById(eventId, {
-    targetTabId: event.target === "page" ? replayTargetTabId : null,
-    focusTargetTab: event.target === "page" && Boolean(replayTargetTabId)
+    targetTabId,
+    focusTargetTab: event.target === "page" && Boolean(targetTabId)
   });
-  setStatus(result.ok ? "원래 웹 탭으로 이동해서 재생했습니다." : result.userMessage);
+  setStatus(
+    result.ok ? "원래 웹 탭으로 이동해서 재생했습니다." : result.userMessage,
+    result.ok ? "success" : "error"
+  );
 }
 
 async function refresh() {
@@ -173,7 +212,7 @@ async function refresh() {
     renderEvents(stats);
   } catch (error) {
     console.error("collection refresh failed", error);
-    setStatus("도감을 불러오는 중 오류가 발생했습니다.");
+    setStatus("도감을 불러오는 중 오류가 발생했습니다.", "error");
   }
 }
 
@@ -193,23 +232,23 @@ function bindEvents() {
 
       if (action === "unlock") {
         await unlockAllEventsForDebug();
-        setStatus("모든 현상을 저장소에 해금했습니다.");
+      setStatus("모든 현상을 저장소에 해금했습니다.", "success");
       }
 
       if (action === "reset") {
         await resetCollectionForDebug();
-        setStatus("도감을 초기화했습니다.");
+      setStatus("도감을 초기화했습니다.", "success");
       }
 
       if (action === "cooldown") {
         await clearCooldownForDebug();
-        setStatus("쿨타임을 초기화했습니다.");
+      setStatus("쿨타임을 초기화했습니다.", "success");
       }
 
       await refresh();
     } catch (error) {
       console.error("debug action failed", error);
-      setStatus("디버그 동작 중 오류가 발생했습니다.");
+      setStatus("디버그 동작 중 오류가 발생했습니다.", "error");
     }
   });
 }
@@ -218,6 +257,11 @@ function init() {
   document.title = `${APP_NAME} 도감`;
   elements.title.textContent = `${APP_NAME} 도감`;
   bindEvents();
+
+  if (shouldShowDebugTools()) {
+    renderDebugPanel();
+  }
+
   refresh();
 
   if (replayTargetTabId) {

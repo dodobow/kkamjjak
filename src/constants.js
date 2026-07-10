@@ -4,7 +4,7 @@ export const APP_DESCRIPTION = "누르면 무슨 일이 일어날지 모릅니�
 export const COOLDOWN_MS = 1 * 1000;
 export const COOLDOWN_ALARM_NAME = "dopamine_button_cooldown_ready";
 export const DEV_UNLOCK_ALL_EVENTS = false;
-export const DEV_SHOW_DEBUG_TOOLS = false;
+export const DEV_SHOW_DEBUG_TOOLS = true;
 
 export const NOTIFICATION_TITLE = "도파민 충전 완료";
 export const NOTIFICATION_MESSAGE =

@@ -13,6 +13,15 @@ const oracleLines = [
   "방금 당신은 작고 의미 없는 역사를 만들었습니다."
 ];
 
+function setMessageLines(message, lines) {
+  message.textContent = "";
+  lines.forEach((line) => {
+    const lineElement = document.createElement("span");
+    lineElement.textContent = line;
+    message.append(lineElement);
+  });
+}
+
 function render() {
   document.title = event ? `${APP_NAME} - ${event.name}` : APP_NAME;
   document.querySelector("#categoryText").textContent = event?.category || "새 탭 이벤트";
@@ -28,13 +37,19 @@ function render() {
   }
 
   if (event.id === "tab_exile") {
-    message.textContent = "당신은 잠시 이 탭으로 유배되었습니다. 형량은 닫기 버튼 한 번입니다.";
+    setMessageLines(message, [
+      "당신은 잠시 이 탭으로 유배되었습니다.",
+      "형량은 닫기 버튼 한 번입니다."
+    ]);
     oracleBox.textContent = "유배 사유: 누르지 말라는 버튼을 눌렀음.";
     return;
   }
 
   if (event.id === "meaningless_oracle") {
-    message.textContent = "무의미하지만 어쩐지 중요한 문장이 도착했습니다.";
+    setMessageLines(message, [
+      "무의미하지만 어쩐지 중요한 문장이",
+      "도착했습니다."
+    ]);
     oracleBox.textContent = oracleLines[Math.floor(Math.random() * oracleLines.length)];
     return;
   }

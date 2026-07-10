@@ -131,8 +131,9 @@ export const DEV_SHOW_DEBUG_TOOLS = true;
 - `tabs`: 내부 새 탭 이벤트와 도감 페이지 열기
 - `notifications`: 쿨타임 종료 알림
 - `alarms`: 쿨타임 종료 시각 예약
+- `host_permissions` (`http://*/*`, `https://*/*`): 도감에서 일반 웹페이지 탭으로 돌아가 이벤트를 다시 재생할 수 있도록 허용
 
-`<all_urls>` 같은 host permission은 사용하지 않습니다. Chrome 내부 페이지나 확장프로그램 페이지처럼 스크립트 주입이 불가능한 곳에서는 이벤트를 기록하지 않고 안내 메시지를 표시합니다.
+`<all_urls>`는 사용하지 않습니다. `chrome://`, `whale://`, Chrome Web Store, 확장프로그램 내부 페이지처럼 스크립트 주입이 불가능한 곳에서는 이벤트를 기록하지 않고 안내 메시지를 표시합니다.
 
 ## 개발 시 주의사항
 

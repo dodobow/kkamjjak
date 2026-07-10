@@ -38,8 +38,9 @@ const elements = {
 
 let cooldownTimer = null;
 
-function setStatus(message) {
+function setStatus(message, state = "info") {
   elements.statusText.textContent = message;
+  elements.statusText.dataset.state = message ? state : "idle";
 }
 
 async function scheduleCooldownAlarm(nextAvailableAt) {
@@ -88,15 +89,18 @@ function renderProgress(progress) {
 function renderLastResult(result) {
   if (!result) {
     elements.lastResultText.textContent = "아직 버튼의 죄가 기록되지 않았습니다.";
+    elements.lastResultText.dataset.state = "empty";
     return;
   }
 
   const event = getEventById(result.eventId);
   if (!event) {
     elements.lastResultText.textContent = "기록은 있는데 이벤트가 사라졌습니다.";
+    elements.lastResultText.dataset.state = "error";
     return;
   }
 
+  elements.lastResultText.dataset.state = "result";
   elements.lastResultText.innerHTML = `
     <strong>${result.isNewDiscovery ? "신규 발견!" : "이미 발견한 현상입니다."}</strong>
     [${event.rarity}] ${event.fullName}<br>
@@ -117,12 +121,12 @@ async function refresh() {
     renderLastResult(lastResult);
   } catch (error) {
     console.error("popup refresh failed", error);
-    setStatus("저장소를 읽는 중 오류가 발생했습니다.");
+    setStatus("저장소를 읽는 중 오류가 발생했습니다.", "error");
   }
 }
 
 async function handleMainButtonClick() {
-  setStatus("운명을 굴리는 중...");
+  setStatus("운명을 굴리는 중...", "loading");
 
   try {
     const cooldown = await getCooldownData();
@@ -136,7 +140,7 @@ async function handleMainButtonClick() {
     const execution = await executeEvent(event);
 
     if (!execution.ok) {
-      setStatus(execution.userMessage);
+      setStatus(execution.userMessage, "error");
       return;
     }
 
@@ -152,11 +156,11 @@ async function handleMainButtonClick() {
     await setCooldown(nextAvailableAt);
     await scheduleCooldownAlarm(nextAvailableAt);
 
-    setStatus("쿨타임 활성화!");
+    setStatus("쿨타임 활성화!", "success");
     await refresh();
   } catch (error) {
     console.error("main button failed", error);
-    setStatus("오류가 발생했습니다. 다시 시도해 주세요.");
+    setStatus("오류가 발생했습니다. 다시 시도해 주세요.", "error");
   }
 }
 
