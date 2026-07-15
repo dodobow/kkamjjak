@@ -1,19 +1,33 @@
-import { CATEGORIES, EVENTS } from "./constants.js";
+import {
+  CATEGORIES,
+  EVENTS,
+  RARITY_ORDER,
+  RARITY_WEIGHTS
+} from "./constants.js";
 
 export function getEventById(eventId) {
   return EVENTS.find((event) => event.id === eventId) || null;
 }
 
-export function pickWeightedEvent(events = EVENTS) {
-  const totalWeight = events.reduce((sum, event) => sum + event.weight, 0);
-  let random = Math.random() * totalWeight;
+export function pickWeightedEvent(events = EVENTS, random = Math.random) {
+  const rarityGroups = RARITY_ORDER.map((rarity) => ({
+    rarity,
+    events: events.filter((event) => event.rarity === rarity),
+    weight: RARITY_WEIGHTS[rarity]
+  })).filter((group) => group.events.length > 0);
+  const totalWeight = rarityGroups.reduce((sum, group) => sum + group.weight, 0);
+  let rarityRoll = random() * totalWeight;
+  let selectedGroup = rarityGroups[rarityGroups.length - 1];
 
-  for (const event of events) {
-    random -= event.weight;
-    if (random <= 0) return event;
+  for (const group of rarityGroups) {
+    if (rarityRoll < group.weight) {
+      selectedGroup = group;
+      break;
+    }
+    rarityRoll -= group.weight;
   }
 
-  return events[events.length - 1];
+  return selectedGroup.events[Math.floor(random() * selectedGroup.events.length)];
 }
 
 export function formatDuration(ms) {

@@ -1,4 +1,5 @@
 import { EVENTS } from "./constants.js";
+import { selectEventContent } from "./content.js";
 import { getEventById, getFriendlyExecutionError, isScriptableUrl } from "./utils.js";
 
 function getRuntimeUrl(path) {
@@ -47,12 +48,24 @@ async function focusTab(tab) {
   }
 }
 
-function executeScriptInTab(tabId, eventId) {
+function executeScriptInTab(tabId, eventId, effectData) {
   return chrome.scripting.executeScript({
     target: { tabId },
     func: runInjectedEffect,
-    args: [eventId]
+    args: [eventId, effectData]
   });
+}
+
+function createContentSelection(eventId, options = {}) {
+  const selection = selectEventContent(
+    eventId,
+    options.contentItemId,
+    options.contentAssetId
+  );
+
+  return selection
+    ? { ...selection, assetUrl: getRuntimeUrl(selection.assetPath) }
+    : null;
 }
 
 export async function executeEvent(event, options = {}) {
@@ -61,11 +74,21 @@ export async function executeEvent(event, options = {}) {
   }
 
   try {
+    const contentSelection = createContentSelection(event.id, options);
+
     if (event.target === "tab") {
+      const eventUrl = new URL(getRuntimeUrl("event-page.html"));
+      eventUrl.searchParams.set("eventId", event.id);
+
+      if (contentSelection) {
+        eventUrl.searchParams.set("contentItemId", contentSelection.itemId);
+        eventUrl.searchParams.set("contentAssetId", contentSelection.assetId);
+      }
+
       await chrome.tabs.create({
-        url: getRuntimeUrl(`event-page.html?eventId=${encodeURIComponent(event.id)}`)
+        url: eventUrl.toString()
       });
-      return { ok: true };
+      return { ok: true, contentSelection };
     }
 
     const tab = await getTargetTab(options.targetTabId);
@@ -82,8 +105,8 @@ export async function executeEvent(event, options = {}) {
       await focusTab(tab);
     }
 
-    await executeScriptInTab(tab.id, event.id);
-    return { ok: true };
+    await executeScriptInTab(tab.id, event.id, contentSelection);
+    return { ok: true, contentSelection };
   } catch (error) {
     console.error("event execution failed", error);
     return {
@@ -100,7 +123,7 @@ export async function executeEventById(eventId, options = {}) {
 }
 
 // This function is serialized by chrome.scripting.executeScript.
-function runInjectedEffect(eventId) {
+function runInjectedEffect(eventId, effectData) {
   const EFFECT_ROOT_ID = "__dopamine_button_effect_root__";
   const STYLE_ID = "__dopamine_button_effect_style__";
   const STATE_KEY = "__dopamine_button_effect_state__";
@@ -172,10 +195,10 @@ function runInjectedEffect(eventId) {
     addStyle(`
       #${EFFECT_ROOT_ID}.db-overlay-message {
         position: fixed; z-index: 2147483647; left: 50%; top: 24px;
-        max-width: min(680px, calc(100vw - 32px)); padding: 16px 20px;
-        border: 2px solid #ff335f; border-radius: 8px; background: rgba(12, 12, 20, .94);
-        color: #fff; box-shadow: 0 18px 60px rgba(255, 51, 95, .35);
-        font: 800 18px/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        max-width: min(680px, calc(100vw - 32px)); padding: 14px 18px;
+        border: 1px solid rgba(255,255,255,.24); border-radius: 6px; background: rgba(32, 32, 30, .96);
+        color: #f7f7f4; box-shadow: 0 8px 24px rgba(0,0,0,.24);
+        font: 650 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         text-align: center; pointer-events: none; transform: translateX(-50%);
       }
       #${EFFECT_ROOT_ID}.db-overlay-message-center {
@@ -337,20 +360,31 @@ function runInjectedEffect(eventId) {
     }
 
     case "sudden_cat": {
-      const root = createRoot("db-cat");
-      root.innerHTML = `<div class="db-cat-emoji">${randomFrom(["🐈", "🐈‍⬛", "😼"])}</div><p>${randomFrom([
-        "고양이가 모든 판단을 보류했습니다.",
-        "고양이가 방금 이 탭의 주인이 되었습니다.",
-        "고양이는 버튼을 누른 적이 없다고 합니다."
-      ])}</p>`;
+      if (!effectData?.assetUrl) {
+        throw new Error("Missing discovery asset");
+      }
+
+      const root = createRoot("db-discovery");
+      const image = document.createElement("img");
+      const label = document.createElement("span");
+      image.src = effectData.assetUrl;
+      image.alt = "";
+      label.textContent = `${effectData.itemName} 발견`;
+      image.addEventListener("error", () => {
+        image.remove();
+        label.textContent = "이미지를 불러오지 못했습니다.";
+      }, { once: true });
+      root.append(image, label);
       addStyle(`
-        #${EFFECT_ROOT_ID}.db-cat { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-content: center; gap: 6px; text-align: center; color: #fff; pointer-events: none; animation: dbCatIn .35s ease-out both; }
-        #${EFFECT_ROOT_ID}.db-cat::before { content: ""; position: absolute; inset: 0; background: rgba(9, 10, 16, .42); }
-        #${EFFECT_ROOT_ID} .db-cat-emoji, #${EFFECT_ROOT_ID} p { position: relative; margin: 0; }
-        #${EFFECT_ROOT_ID} .db-cat-emoji { font-size: min(34vw, 250px); filter: drop-shadow(0 24px 30px rgba(0,0,0,.45)); animation: dbCatFloat 1.4s ease-in-out infinite alternate; }
-        #${EFFECT_ROOT_ID} p { max-width: min(620px, calc(100vw - 32px)); padding: 12px 18px; border: 1px solid rgba(255,255,255,.28); border-radius: 8px; background: rgba(15, 15, 22, .9); font: 800 18px/1.4 system-ui, sans-serif; }
-        @keyframes dbCatIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
-        @keyframes dbCatFloat { to { transform: translateY(-12px) rotate(3deg); } }
+        #${EFFECT_ROOT_ID}.db-discovery { position: fixed; inset: 0; z-index: 2147483647; display: grid; grid-template-rows: minmax(0, 1fr) auto; place-items: center; gap: 14px; padding: min(9vh, 72px) 24px 28px; color: #fff; text-align: center; pointer-events: none; }
+        #${EFFECT_ROOT_ID}.db-discovery::before { content: ""; position: absolute; inset: 0; background: rgba(9, 10, 16, .48); animation: dbDiscoveryShade 4.8s ease both; }
+        #${EFFECT_ROOT_ID}.db-discovery img { position: relative; align-self: end; width: min(72vw, 680px); height: min(68vh, 680px); object-fit: contain; filter: drop-shadow(0 20px 22px rgba(0,0,0,.42)); animation: dbDiscoveryIn 4.8s cubic-bezier(.2,.75,.2,1) both; }
+        #${EFFECT_ROOT_ID}.db-discovery span { position: relative; min-width: 10rem; padding: 10px 16px; border: 1px solid rgba(255,255,255,.28); border-radius: 6px; background: rgba(32,32,30,.94); font: 650 17px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; animation: dbDiscoveryLabel 4.8s ease both; }
+        @keyframes dbDiscoveryShade { 0%,100% { opacity: 0; } 12%,82% { opacity: 1; } }
+        @keyframes dbDiscoveryIn { 0% { opacity: 0; transform: translateY(8vh) scale(.72); } 18%,78% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-2vh) scale(.96); } }
+        @keyframes dbDiscoveryLabel { 0%,12%,88%,100% { opacity: 0; transform: translateY(8px); } 24%,78% { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 540px) { #${EFFECT_ROOT_ID}.db-discovery img { width: min(88vw, 680px); height: min(64vh, 680px); } }
+        @media (prefers-reduced-motion: reduce) { #${EFFECT_ROOT_ID}.db-discovery::before, #${EFFECT_ROOT_ID}.db-discovery img, #${EFFECT_ROOT_ID}.db-discovery span { animation-timing-function: linear; } }
       `);
       cleanupLater(4800);
       break;
@@ -369,7 +403,7 @@ function runInjectedEffect(eventId) {
 
     case "odd_stamp": {
       const root = createRoot("db-stamp");
-      root.textContent = randomFrom(["승인됨?", "검토 보류", "이상 없음", "확인 불가"]);
+      root.textContent = randomFrom(["오늘의 표시", "좋은 징조", "다음 장면", "작은 발견"]);
       root.style.setProperty("--stamp-x", `${12 + Math.random() * 76}vw`);
       root.style.setProperty("--stamp-y", `${14 + Math.random() * 72}vh`);
       root.style.setProperty("--stamp-r", `${-32 + Math.random() * 64}deg`);
@@ -383,12 +417,12 @@ function runInjectedEffect(eventId) {
 
     case "mystery_sound":
       playTone([220, 293.66, 233.08, 440, 155.56]);
-      overlayMessage("띠로롱. 방금 무언가 승인된 척했습니다.", 3000);
+      overlayMessage("띠로롱. 작은 행운이 지나갔습니다.", 3000);
       break;
 
     case "failed_fanfare":
       playTone([523.25, 659.25, 783.99, 1046.5, 155.56]);
-      overlayMessage("팡파르가 마지막 음에서 자신감을 잃었습니다.", 3600);
+      overlayMessage("팡파르가 마지막 음에서 살짝 웃었습니다.", 3600);
       break;
 
     case "tone_pollution": {
@@ -404,11 +438,11 @@ function runInjectedEffect(eventId) {
       const changedNodes = candidates.map((node, index) => {
         const originalText = node.textContent;
         node.dataset.dopamineOriginalText = originalText;
-        node.textContent = `${randomFrom(["긴급 공지:", "참고로", "아무튼", "공식 발표:"])} ${originalText.trim().slice(0, 88)} ${[
-          "아마 버튼 때문입니다.",
-          "라는 소문이 있습니다.",
-          "버튼은 알고 있습니다.",
-          "...라고 적혀 있네요."
+        node.textContent = `${randomFrom(["오늘의 메모:", "참고로", "작은 소식:", "한마디 덧붙이면:"])} ${originalText.trim().slice(0, 88)} ${[
+          "왠지 좋은 예감입니다.",
+          "다음 장면도 궁금하네요.",
+          "작은 행운을 덧붙입니다.",
+          "...라고 속삭입니다."
         ][index % 4]}`;
         return [node, originalText];
       });
@@ -420,15 +454,15 @@ function runInjectedEffect(eventId) {
           }
         });
       });
-      overlayMessage(`페이지의 문장 ${changedNodes.length}개가 잠깐 이상해졌습니다.`, 5600);
+      overlayMessage(`페이지의 문장 ${changedNodes.length}개에 작은 한마디가 더해졌습니다.`, 5600);
       break;
     }
 
     case "button_mockery":
       overlayMessage(randomFrom([
-        "너는 또 버튼을 눌렀다. 기록은 남았다.",
-        "버튼은 당신의 선택을 기억합니다.",
-        "이번에도 호기심이 이겼습니다."
+        "다음에는 어떤 장면이 나올까요?",
+        "호기심은 늘 좋은 출발입니다.",
+        "오늘의 한 장을 골랐습니다."
       ]), 4600, true);
       break;
 
@@ -437,15 +471,15 @@ function runInjectedEffect(eventId) {
       break;
 
     case "delayed_disaster":
-      overlayMessage("...", 0);
+      overlayMessage("잠시만요...", 0);
       schedule(() => {
         const root = createRoot("db-catastrophe");
-        root.innerHTML = "<span>늦었습니다.<br>이제야 도착한 재앙입니다.</span>";
+        root.innerHTML = "<span>조금 늦었지만,<br>깜짝 장면이 도착했어요.</span>";
         addStyle(`
           html.db-disaster { filter: hue-rotate(150deg) saturate(2.1) contrast(1.38); }
           html.db-disaster body { animation: dbCatastrophe .11s linear 30; transform-origin: center; will-change: transform; }
           #${EFFECT_ROOT_ID}.db-catastrophe { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; overflow: hidden; color: white; background: repeating-linear-gradient(0deg, rgba(255,255,255,.13) 0 2px, transparent 2px 7px), rgba(255, 20, 80, .24); pointer-events: none; font: 900 min(7vw, 70px)/1.08 system-ui, sans-serif; text-align: center; text-shadow: 0 8px 28px rgba(0,0,0,.72); }
-          #${EFFECT_ROOT_ID}.db-catastrophe::before { content: "!  !  !  !  !  !"; position: absolute; inset: -20%; color: rgba(255,255,255,.28); font-size: min(18vw, 190px); letter-spacing: 20px; animation: dbWarningFall 1.1s linear infinite; }
+          #${EFFECT_ROOT_ID}.db-catastrophe::before { content: "+  +  +  +  +  +"; position: absolute; inset: -20%; color: rgba(255,255,255,.28); font-size: min(18vw, 190px); letter-spacing: 20px; animation: dbWarningFall 1.1s linear infinite; }
           #${EFFECT_ROOT_ID}.db-catastrophe span { position: relative; padding: 26px 32px; border: 2px solid rgba(255,255,255,.7); border-radius: 8px; background: rgba(12,12,18,.76); }
           @keyframes dbCatastrophe { 0%,100% { transform: translate(0) scale(1); } 25% { transform: translate(9px,-5px) scale(1.12); } 50% { transform: translate(-8px,7px) scale(1.16); } 75% { transform: translate(4px,5px) scale(1.1); } }
           @keyframes dbWarningFall { to { transform: translateY(18%); } }
@@ -464,7 +498,7 @@ function runInjectedEffect(eventId) {
         @keyframes dbJudgementSpin { to { transform: rotate(1turn); } }
       `);
       document.documentElement.classList.add("db-judgement");
-      createRoot("db-judgement-root").innerHTML = "<span>버튼의<br>심판</span>";
+      createRoot("db-judgement-root").innerHTML = "<span>버튼의<br>선택</span>";
       cleanupLater(6800);
       break;
 

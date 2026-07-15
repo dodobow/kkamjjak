@@ -5,7 +5,9 @@ import {
   COOLDOWN_MS,
   EVENTS
 } from "./src/constants.js";
+import { getEventContentItem } from "./src/content.js";
 import { executeEvent } from "./src/effects.js";
+import { initTheme } from "./src/theme.js";
 import {
   getCategoryStats,
   getEventById,
@@ -56,10 +58,10 @@ function renderCooldown(nextAvailableAt) {
   const isCoolingDown = remainingMs > 0;
 
   elements.mainButton.disabled = isCoolingDown;
-  elements.mainButton.textContent = isCoolingDown ? "봉인됨" : "누르지 마시오";
+  elements.mainButton.textContent = isCoolingDown ? "다음 한 장 준비 중" : "오늘의 한 장 열기";
   elements.cooldownText.textContent = isCoolingDown
-    ? `남은 시간 ${formatDuration(remainingMs)}`
-    : "버튼 사용 가능";
+    ? `다음 한 장까지 ${formatDuration(remainingMs)}`
+    : "새로운 한 장을 열 수 있어요";
 
   if (cooldownTimer) {
     clearInterval(cooldownTimer);
@@ -75,6 +77,9 @@ function renderProgress(progress) {
   const percent = Math.round((progress.discoveredCount / progress.totalCount) * 100);
   elements.progressText.textContent = `${progress.discoveredCount} / ${progress.totalCount} 발견`;
   elements.progressFill.style.width = `${percent}%`;
+  const progressTrack = elements.progressFill.parentElement;
+  progressTrack.setAttribute("aria-valuemax", String(progress.totalCount));
+  progressTrack.setAttribute("aria-valuenow", String(progress.discoveredCount));
 
   const stats = getCategoryStats(progress.collection);
   elements.categoryProgress.textContent = "";
@@ -88,22 +93,23 @@ function renderProgress(progress) {
 
 function renderLastResult(result) {
   if (!result) {
-    elements.lastResultText.textContent = "아직 버튼의 죄가 기록되지 않았습니다.";
+    elements.lastResultText.textContent = "아직 열어 본 장면이 없어요.";
     elements.lastResultText.dataset.state = "empty";
     return;
   }
 
   const event = getEventById(result.eventId);
   if (!event) {
-    elements.lastResultText.textContent = "기록은 있는데 이벤트가 사라졌습니다.";
+    elements.lastResultText.textContent = "기록은 남아 있지만 장면을 찾지 못했어요.";
     elements.lastResultText.dataset.state = "error";
     return;
   }
 
+  const contentItem = getEventContentItem(result.eventId, result.contentItemId);
   elements.lastResultText.dataset.state = "result";
   elements.lastResultText.innerHTML = `
-    <strong>${result.isNewDiscovery ? "신규 발견!" : "이미 발견한 현상입니다."}</strong>
-    [${event.rarity}] ${event.fullName}<br>
+    <strong>${result.isNewDiscovery ? "새로운 장면 발견!" : "이미 만난 장면이에요."}</strong>
+    [${event.rarity}] ${event.fullName}${contentItem ? ` · ${contentItem.name}` : ""}<br>
     <span>${formatTimestamp(result.triggeredAt)}</span>
   `;
 }
@@ -121,18 +127,18 @@ async function refresh() {
     renderLastResult(lastResult);
   } catch (error) {
     console.error("popup refresh failed", error);
-    setStatus("저장소를 읽는 중 오류가 발생했습니다.", "error");
+    setStatus("기록을 읽는 중 잠시 문제가 생겼어요.", "error");
   }
 }
 
 async function handleMainButtonClick() {
-  setStatus("운명을 굴리는 중...", "loading");
+  setStatus("오늘의 한 장을 고르는 중...", "loading");
 
   try {
     const cooldown = await getCooldownData();
     if (cooldown.nextAvailableAt > Date.now()) {
       renderCooldown(cooldown.nextAvailableAt);
-      setStatus("아직 봉인이 풀리지 않았습니다.");
+      setStatus("다음 한 장을 준비하고 있어요.");
       return;
     }
 
@@ -144,23 +150,25 @@ async function handleMainButtonClick() {
       return;
     }
 
-    const discovery = await updateEventDiscovery(event.id);
+    const discovery = await updateEventDiscovery(event.id, execution.contentSelection);
     const triggeredAt = Date.now();
     const nextAvailableAt = triggeredAt + COOLDOWN_MS;
 
     await setLastResult({
       eventId: event.id,
-      isNewDiscovery: discovery.isNewDiscovery,
+      contentItemId: execution.contentSelection?.itemId || null,
+      contentAssetId: execution.contentSelection?.assetId || null,
+      isNewDiscovery: discovery.isNewDiscovery || discovery.isNewSubItemDiscovery,
       triggeredAt
     });
     await setCooldown(nextAvailableAt);
     await scheduleCooldownAlarm(nextAvailableAt);
 
-    setStatus("쿨타임 활성화!", "success");
+    setStatus("새 장면을 도감에 담았어요.", "success");
     await refresh();
   } catch (error) {
     console.error("main button failed", error);
-    setStatus("오류가 발생했습니다. 다시 시도해 주세요.", "error");
+    setStatus("잠시 문제가 생겼어요. 다시 한 장을 열어 주세요.", "error");
   }
 }
 
@@ -185,6 +193,7 @@ async function openCollection() {
 }
 
 function init() {
+  void initTheme();
   document.title = APP_NAME;
   elements.appName.textContent = APP_NAME;
   elements.appDescription.textContent = APP_DESCRIPTION;

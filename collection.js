@@ -2,9 +2,12 @@ import {
   APP_NAME,
   DEV_SHOW_DEBUG_TOOLS,
   DEV_UNLOCK_ALL_EVENTS,
-  EVENTS
+  EVENTS,
+  formatProbabilityLabel
 } from "./src/constants.js";
+import { getEventContent, getEventContentItems } from "./src/content.js";
 import { executeEventById } from "./src/effects.js";
+import { initTheme } from "./src/theme.js";
 import {
   clearCooldownForDebug,
   getCollectionData,
@@ -66,12 +69,31 @@ function createDevUnlockedCollection(collectionData) {
 
   const now = Date.now();
   return EVENTS.reduce((result, event) => {
+    const previous = collectionData[event.id] || {};
     result[event.id] = {
+      ...previous,
       discovered: true,
-      firstDiscoveredAt: collectionData[event.id]?.firstDiscoveredAt || now,
-      lastDiscoveredAt: collectionData[event.id]?.lastDiscoveredAt || now,
-      count: Math.max(1, collectionData[event.id]?.count || 0)
+      firstDiscoveredAt: previous.firstDiscoveredAt || now,
+      lastDiscoveredAt: previous.lastDiscoveredAt || now,
+      count: Math.max(1, previous.count || 0)
     };
+
+    const contentItems = getEventContentItems(event.id);
+    if (contentItems.length) {
+      result[event.id].subItems = contentItems.reduce((subItems, item) => {
+        const previousSubItem = previous.subItems?.[item.id] || {};
+        subItems[item.id] = {
+          ...previousSubItem,
+          discovered: true,
+          firstDiscoveredAt: previousSubItem.firstDiscoveredAt || now,
+          lastDiscoveredAt: previousSubItem.lastDiscoveredAt || now,
+          count: Math.max(1, previousSubItem.count || 0),
+          lastAssetId: previousSubItem.lastAssetId || item.assets[0]?.id || null
+        };
+        return subItems;
+      }, {});
+    }
+
     return result;
   }, {});
 }
@@ -104,6 +126,71 @@ function renderDebugPanel() {
   elements.categoryStats.append(panel);
 }
 
+function createContentItemList(event, entry) {
+  const content = getEventContent(event.id);
+  if (!content?.items.length) return null;
+
+  const discoveredCount = content.items.filter(
+    (item) => entry?.subItems?.[item.id]?.discovered
+  ).length;
+  const container = document.createElement("div");
+  container.className = "content-item-list";
+  container.setAttribute("aria-label", `${event.name} 하위 항목`);
+
+  const heading = document.createElement("div");
+  heading.className = "content-item-heading";
+  heading.innerHTML = `<strong>하위 항목</strong><span>${discoveredCount} / ${content.items.length}</span>`;
+  container.append(heading);
+
+  content.items.forEach((item) => {
+    const subItemEntry = entry?.subItems?.[item.id];
+    const isDiscovered = Boolean(subItemEntry?.discovered);
+    const asset = item.assets.find((candidate) => candidate.id === subItemEntry?.lastAssetId)
+      || item.assets[0];
+    const row = document.createElement("div");
+    row.className = `content-item${isDiscovered ? "" : " locked"}`;
+
+    const preview = document.createElement("div");
+    preview.className = `content-item-preview content-item-preview-${content.kind}`;
+    if (isDiscovered && asset) {
+      const image = document.createElement("img");
+      image.src = chrome.runtime.getURL(asset.path);
+      image.alt = asset.alt;
+      preview.append(image);
+    } else {
+      const placeholder = document.createElement("span");
+      placeholder.textContent = "?";
+      placeholder.setAttribute("aria-hidden", "true");
+      preview.append(placeholder);
+    }
+
+    const detail = document.createElement("div");
+    detail.className = "content-item-detail";
+    const name = document.createElement("strong");
+    const count = document.createElement("span");
+    const itemProbability = event.probability / content.items.length;
+    name.textContent = isDiscovered ? item.name : "미발견 항목";
+    count.textContent = isDiscovered
+      ? `${formatProbabilityLabel(itemProbability)} · ${subItemEntry.count || 0}회 발견`
+      : `${formatProbabilityLabel(itemProbability)} · 아직 미발견`;
+    detail.append(name, count);
+
+    const replayButton = document.createElement("button");
+    replayButton.className = "content-replay-button";
+    replayButton.type = "button";
+    replayButton.dataset.eventId = event.id;
+    replayButton.dataset.contentItemId = item.id;
+    replayButton.disabled = !isDiscovered;
+    replayButton.textContent = "다시 보기";
+    replayButton.setAttribute("aria-label", `${isDiscovered ? item.name : "미발견 항목"} 다시 보기`);
+
+    row.append(preview, detail, replayButton);
+    container.append(row);
+  });
+
+  return container;
+}
+
 function createEventCard(event) {
   const entry = collection[event.id];
   const isDiscovered = Boolean(entry?.discovered);
@@ -111,10 +198,10 @@ function createEventCard(event) {
   card.className = `event-card${isDiscovered ? "" : " locked"}`;
 
   const title = isDiscovered ? event.fullName : "???";
-  const name = isDiscovered ? event.name : "아직 발견하지 못한 현상입니다.";
+  const name = isDiscovered ? event.name : "아직 만나지 못한 장면입니다.";
   const description = isDiscovered
     ? event.description
-    : "버튼이 아직 이 현상을 허락하지 않았습니다.";
+    : "다음 한 장에서 만날 수 있어요.";
 
   card.innerHTML = `
     <div class="card-top">
@@ -125,20 +212,26 @@ function createEventCard(event) {
       <span class="rarity">${event.rarity}</span>
     </div>
     <p class="description">${description}</p>
-    <div class="detail-list">
-      <div><span>등장 확률</span><strong>${event.probabilityLabel}</strong></div>
-      <div><span>최초 발견</span><strong>${formatTimestamp(entry?.firstDiscoveredAt)}</strong></div>
-      <div><span>마지막 발견</span><strong>${formatTimestamp(entry?.lastDiscoveredAt)}</strong></div>
-      <div><span>발견 횟수</span><strong>${entry?.count || 0}</strong></div>
-    </div>
+    <dl class="detail-list">
+      <div><dt>등장 확률</dt><dd>${event.probabilityLabel}</dd></div>
+      <div><dt>최초 발견</dt><dd>${formatTimestamp(entry?.firstDiscoveredAt)}</dd></div>
+      <div><dt>마지막 발견</dt><dd>${formatTimestamp(entry?.lastDiscoveredAt)}</dd></div>
+      <div><dt>발견 횟수</dt><dd>${entry?.count || 0}</dd></div>
+    </dl>
   `;
+
+  const contentItemList = createContentItemList(event, entry);
+  if (contentItemList) {
+    card.append(contentItemList);
+    return card;
+  }
 
   const replayButton = document.createElement("button");
   replayButton.className = "replay-button";
   replayButton.type = "button";
   replayButton.dataset.eventId = event.id;
   replayButton.disabled = !isDiscovered;
-  replayButton.textContent = isDiscovered ? "다시 재생" : "잠금";
+  replayButton.textContent = isDiscovered ? "한 번 더 보기" : "아직 미발견";
   card.append(replayButton);
 
   return card;
@@ -165,34 +258,46 @@ function renderEvents(stats) {
   });
 }
 
-async function replayEvent(eventId) {
+async function replayEvent(eventId, contentItemId = null) {
   const event = getEventById(eventId);
   const entry = collection[eventId];
 
   if (!event) {
-    setStatus("이벤트를 찾을 수 없습니다.", "error");
+    setStatus("이 장면을 찾지 못했어요.", "error");
     return;
   }
 
   if (!entry?.discovered) {
-    setStatus("아직 발견하지 못한 이벤트입니다.");
+    setStatus("아직 만나지 못한 장면이에요.");
+    return;
+  }
+
+  const subItemEntry = contentItemId ? entry.subItems?.[contentItemId] : null;
+  if (contentItemId && !subItemEntry?.discovered) {
+    setStatus("아직 만나지 못한 하위 항목이에요.");
     return;
   }
 
   const targetTabId = event.target === "page" ? await resolveReplayTargetTabId() : null;
 
   if (event.target === "page" && !targetTabId) {
-    setStatus("재생할 일반 웹페이지 탭을 찾지 못했습니다.", "error");
+    setStatus("장면을 보여줄 일반 웹페이지 탭을 찾지 못했어요.", "error");
     return;
   }
 
-  setStatus(`${event.fullName} 재생 중...`, "loading");
+  setStatus(`${event.fullName} 장면을 다시 펼치는 중...`, "loading");
   const result = await executeEventById(eventId, {
     targetTabId,
-    focusTargetTab: event.target === "page" && Boolean(targetTabId)
+    focusTargetTab: event.target === "page" && Boolean(targetTabId),
+    contentItemId,
+    contentAssetId: subItemEntry?.lastAssetId || null
   });
   setStatus(
-    result.ok ? "원래 웹 탭으로 이동해서 재생했습니다." : result.userMessage,
+    result.ok
+      ? event.target === "page"
+        ? "원래 웹 탭에서 장면을 다시 보여드렸어요."
+        : "새 탭에서 장면을 다시 열었어요."
+      : result.userMessage,
     result.ok ? "success" : "error"
   );
 }
@@ -212,15 +317,15 @@ async function refresh() {
     renderEvents(stats);
   } catch (error) {
     console.error("collection refresh failed", error);
-    setStatus("도감을 불러오는 중 오류가 발생했습니다.", "error");
+    setStatus("도감을 불러오는 중 잠시 문제가 생겼어요.", "error");
   }
 }
 
 function bindEvents() {
   elements.eventSections.addEventListener("click", (event) => {
-    const button = event.target.closest(".replay-button");
+    const button = event.target.closest(".replay-button, .content-replay-button");
     if (!button) return;
-    replayEvent(button.dataset.eventId);
+    replayEvent(button.dataset.eventId, button.dataset.contentItemId || null);
   });
 
   elements.categoryStats.addEventListener("click", async (event) => {
@@ -232,28 +337,29 @@ function bindEvents() {
 
       if (action === "unlock") {
         await unlockAllEventsForDebug();
-      setStatus("모든 현상을 저장소에 해금했습니다.", "success");
+      setStatus("모든 장면을 도감에서 볼 수 있게 했어요.", "success");
       }
 
       if (action === "reset") {
         await resetCollectionForDebug();
-      setStatus("도감을 초기화했습니다.", "success");
+      setStatus("도감을 비우고 새 기록을 기다리고 있어요.", "success");
       }
 
       if (action === "cooldown") {
         await clearCooldownForDebug();
-      setStatus("쿨타임을 초기화했습니다.", "success");
+      setStatus("다음 한 장을 바로 열 수 있어요.", "success");
       }
 
       await refresh();
     } catch (error) {
       console.error("debug action failed", error);
-      setStatus("디버그 동작 중 오류가 발생했습니다.", "error");
+      setStatus("개발자 동작 중 잠시 문제가 생겼어요.", "error");
     }
   });
 }
 
 function init() {
+  void initTheme();
   document.title = `${APP_NAME} 도감`;
   elements.title.textContent = `${APP_NAME} 도감`;
   bindEvents();
@@ -265,9 +371,9 @@ function init() {
   refresh();
 
   if (replayTargetTabId) {
-    setStatus("다시 재생을 누르면 도감을 열었던 웹 탭으로 이동해서 보여줍니다.");
+    setStatus("한 번 더 보기를 누르면 도감을 열었던 웹 탭에서 장면을 보여드려요.");
   } else {
-    setStatus("웹페이지에서 확장 아이콘으로 도감을 열면 페이지 효과 재생이 안정적입니다.");
+    setStatus("웹페이지에서 확장 아이콘으로 도감을 열면 장면을 한 번 더 보기 좋아요.");
   }
 }
 

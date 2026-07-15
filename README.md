@@ -4,7 +4,7 @@
 
 ## 프로젝트 소개
 
-버튼을 누르면 20개 장난성 이벤트 중 하나가 현재 페이지 또는 확장프로그램 내부 새 탭에서 발생하는 Manifest V3 확장프로그램입니다. 생산성은 내려놓고 랜덤성, 수집욕, 쓸데없는 도파민에 집중했습니다.
+버튼을 누르면 20개 작은 랜덤 장면 중 하나가 현재 페이지 또는 확장프로그램 내부 새 탭에서 열리는 Manifest V3 확장프로그램입니다. 랜덤성, 수집욕, 그리고 가벼운 호기심에 집중했습니다.
 
 ## 주요 기능
 
@@ -12,6 +12,7 @@
 - 20개 이벤트 도감 수집 및 카테고리별 진행률 표시
 - 발견한 이벤트 도감에서 다시 재생
 - 기본 1시간 쿨타임과 종료 브라우저 알림
+- 팝업, 도감, 새 탭 화면에 동기화되는 라이트/다크 모드
 - 외부 서버, 외부 이미지, 외부 사운드, CDN 없이 동작
 
 ## 설치 및 실행 방법
@@ -34,20 +35,25 @@
 
 ## 사용 방법
 
-팝업을 열고 `누르지 마시오` 버튼을 누르면 이벤트가 실행됩니다. 이벤트가 정상 실행되면 도감에 기록되고 1시간 쿨타임이 시작됩니다. `도감 열기`에서 발견한 이벤트를 확인하고 다시 재생할 수 있습니다. 도감 재생에는 쿨타임이 적용되지 않습니다.
+팝업을 열고 `오늘의 한 장 열기` 버튼을 누르면 장면이 열립니다. 장면이 정상 실행되면 도감에 기록되고 1시간 쿨타임이 시작됩니다. `도감 열기`에서 발견한 장면을 확인하고 한 번 더 볼 수 있습니다. 도감 재생에는 쿨타임이 적용되지 않습니다.
 
 ## 파일 구조
 
 ```txt
 manifest.json
+styles/tokens.css
 popup.html / popup.css / popup.js
 collection.html / collection.css / collection.js
 event-page.html / event-page.css / event-page.js
 background.js
 src/constants.js
+src/content.js
 src/storage.js
 src/effects.js
+src/theme-init.js / src/theme.js
 src/utils.js
+assets/images/discoveries/
+assets/images/scenes/
 assets/icons/icon16.png
 assets/icons/icon48.png
 assets/icons/icon128.png
@@ -65,7 +71,7 @@ export const COOLDOWN_MS = 10 * 1000;
 
 20개 이벤트를 모두 확률로 뽑아 확인하지 않아도 됩니다. 도감 페이지를 `collection.html?debug=1`로 열면 숨겨진 개발자 테스트 패널이 나타나며, 모든 현상 해금 저장, 도감 초기화, 쿨타임 초기화를 실행할 수 있습니다.
 
-도감에서 `다시 재생`으로 페이지 효과를 확인하려면 일반 웹페이지에서 확장프로그램 팝업을 열고 `도감 열기`를 눌러야 합니다. 이때 팝업이 원래 웹 탭의 `targetTabId`를 도감에 넘기므로, 도감 탭이 `chrome-extension://` 또는 `whale-extension://` 주소여도 다시 재생 시 원래 웹 탭으로 자동 전환한 뒤 효과를 보여줍니다.
+도감에서 `한 번 더 보기`로 페이지 효과를 확인하려면 일반 웹페이지에서 확장프로그램 팝업을 열고 `도감 열기`를 눌러야 합니다. 이때 팝업이 원래 웹 탭의 `targetTabId`를 도감에 넘기므로, 도감 탭이 `chrome-extension://` 또는 `whale-extension://` 주소여도 다시 재생 시 원래 웹 탭으로 자동 전환한 뒤 효과를 보여줍니다.
 
 저장소를 건드리지 않고 도감 화면에서만 전부 해금된 것처럼 보고 싶다면 `src/constants.js`에서 아래 값을 잠시 `true`로 바꾸세요.
 
@@ -88,40 +94,51 @@ export const DEV_SHOW_DEBUG_TOOLS = true;
   discovered: true,
   firstDiscoveredAt: 1234567890,
   lastDiscoveredAt: 1234567890,
-  count: 3
+  count: 3,
+  subItems: {
+    dog: {
+      discovered: true,
+      firstDiscoveredAt: 1234567890,
+      lastDiscoveredAt: 1234567890,
+      count: 2,
+      lastAssetId: "dog-01"
+    }
+  }
 }
 ```
 
-최근 결과는 `{ eventId, isNewDiscovery, triggeredAt }` 형태로 저장합니다.
+하위 항목이 없는 이벤트에는 `subItems`가 생성되지 않습니다. 최근 결과에는 `eventId`와 함께 선택된 `contentItemId`, `contentAssetId`, 발견 여부와 실행 시각을 저장합니다.
 
 ## 이벤트 카테고리 구조
 
 이벤트는 `카테고리 - 명칭` 구조를 유지합니다. 카테고리는 `웹페이지 변화`, `이미지`, `사운드`, `새 탭`, `텍스트`, `기타`, `특수 효과`입니다.
 
+등급 확률은 `Common 50%`, `Rare 35%`, `Epic 10%`, `Legendary 4%`, `Mythic 1%`입니다. 같은 등급의 현상은 등급 확률을 `1/N`로 균등하게 나누고, 현상에 하위 항목이 있으면 해당 현상의 확률을 다시 `1/N`로 나눕니다.
+
 ## 이벤트 20개 목록
 
 | 카테고리 | 이벤트 | 희귀도 | 확률 |
 | --- | --- | --- | --- |
-| 웹페이지 변화 | 빙글빙글 | Common | 9.0% |
-| 웹페이지 변화 | 브라우저 지진 | Common | 9.0% |
-| 웹페이지 변화 | 색감 멸망 | Rare | 6.0% |
-| 웹페이지 변화 | 흑백 세상 | Common | 8.0% |
-| 웹페이지 변화 | 흐릿한 진실 | Common | 8.0% |
-| 웹페이지 변화 | 확대 착시 | Rare | 6.0% |
+| 웹페이지 변화 | 빙글빙글 | Common | 8.33% |
+| 웹페이지 변화 | 브라우저 지진 | Common | 8.33% |
+| 웹페이지 변화 | 색감 뒤집기 | Rare | 5.0% |
+| 웹페이지 변화 | 흑백 세상 | Common | 8.33% |
+| 웹페이지 변화 | 흐릿한 진실 | Common | 8.33% |
+| 웹페이지 변화 | 확대 착시 | Rare | 5.0% |
 | 웹페이지 변화 | 눈 오는 브라우저 | Rare | 5.0% |
 | 웹페이지 변화 | 비 오는 브라우저 | Rare | 5.0% |
-| 이미지 | 갑분고양이 | Common | 7.5% |
-| 이미지 | 거대 이모지 습격 | Rare | 5.5% |
-| 이미지 | 수상한 표식 | Epic | 3.0% |
-| 사운드 | 정체불명의 효과음 | Common | 7.0% |
-| 사운드 | 실패한 팡파르 | Epic | 3.5% |
-| 새 탭 | 유배 | Rare | 4.5% |
-| 새 탭 | 무의미한 계시 | Epic | 3.0% |
-| 텍스트 | 말투 오염 | Epic | 3.5% |
-| 텍스트 | 버튼의 조롱 | Rare | 5.5% |
-| 기타 | Nothing | Legendary | 1.0% |
-| 기타 | 지연된 재앙 | Legendary | 1.5% |
-| 특수 효과 | 버튼의 심판 | Mythic | 0.5% |
+| 이미지 | 발견 | Common | 8.33% |
+| 이미지 | 거대 이모지 습격 | Rare | 5.0% |
+| 이미지 | 수상한 표식 | Epic | 2.5% |
+| 사운드 | 정체불명의 효과음 | Common | 8.33% |
+| 사운드 | 삐끗한 팡파르 | Epic | 2.5% |
+| 새 탭 | 작은 외출 | Rare | 5.0% |
+| 새 탭 | 오늘의 한마디 | Epic | 2.5% |
+| 텍스트 | 말투 바꾸기 | Epic | 2.5% |
+| 텍스트 | 버튼의 한마디 | Rare | 5.0% |
+| 기타 | Nothing | Legendary | 2.0% |
+| 기타 | 늦게 온 선물 | Legendary | 2.0% |
+| 특수 효과 | 버튼의 선택 | Mythic | 1.0% |
 
 ## 권한 설명
 

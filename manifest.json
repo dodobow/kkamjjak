@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "도파민 버튼",
-  "description": "누르면 무슨 일이 일어날지 모르는 랜덤 장난 버튼입니다.",
+  "description": "오늘의 작은 우연을 열어 보는 랜덤 버튼입니다.",
   "version": "0.1.0",
   "action": {
     "default_title": "도파민 버튼",
@@ -28,6 +28,17 @@
   "host_permissions": [
     "http://*/*",
     "https://*/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/images/discoveries/*"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
   ],
   "background": {
     "service_worker": "background.js",

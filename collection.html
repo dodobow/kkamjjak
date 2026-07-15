@@ -4,18 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>도감</title>
+    <script src="src/theme-init.js"></script>
+    <link rel="stylesheet" href="styles/tokens.css">
     <link rel="stylesheet" href="collection.css">
   </head>
   <body>
     <header class="collection-header">
       <div>
-        <p class="eyebrow">수집 기록</p>
+        <p class="eyebrow">발견한 장면</p>
         <h1 id="collectionTitle">도감</h1>
-        <p id="collectionDescription">버튼이 남긴 이상 현상을 보관합니다.</p>
+        <p id="collectionDescription">버튼에서 나온 작은 우연을 모아둡니다.</p>
       </div>
-      <div class="summary">
-        <strong id="totalProgress">0 / 20</strong>
-        <span>발견</span>
+      <div class="header-tools">
+        <label class="theme-toggle">
+          <span>다크 모드</span>
+          <input id="themeToggle" type="checkbox" role="switch" data-theme-toggle>
+          <span class="theme-toggle-control" aria-hidden="true"></span>
+        </label>
+        <div class="summary">
+          <strong id="totalProgress">0 / 20</strong>
+          <span>발견</span>
+        </div>
       </div>
     </header>
 

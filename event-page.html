@@ -4,15 +4,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>이벤트</title>
+    <script src="src/theme-init.js"></script>
+    <link rel="stylesheet" href="styles/tokens.css">
     <link rel="stylesheet" href="event-page.css">
   </head>
   <body>
+    <div id="sceneBackdrop" class="scene-backdrop" aria-hidden="true" hidden></div>
+    <div id="sceneEffects" class="scene-effects" aria-hidden="true" hidden></div>
     <main class="event-page">
+      <div class="event-toolbar">
+        <label class="theme-toggle">
+          <span>다크 모드</span>
+          <input id="themeToggle" type="checkbox" role="switch" data-theme-toggle>
+          <span class="theme-toggle-control" aria-hidden="true"></span>
+        </label>
+      </div>
       <p class="eyebrow" id="categoryText">새 탭 이벤트</p>
       <h1 id="eventTitle">무언가 열렸습니다</h1>
-      <p id="eventMessage" class="message">이 탭은 외부 사이트가 아니라 확장프로그램 내부 페이지입니다.</p>
+      <p id="eventMessage" class="message">이 탭은 오늘의 작은 랜덤을 보여주는 확장프로그램 내부 페이지입니다.</p>
       <div id="oracleBox" class="oracle-box"></div>
-      <button id="closeButton" type="button">조용히 닫기</button>
+      <button id="closeButton" type="button">원래 탭으로 돌아가기</button>
     </main>
 
     <script type="module" src="event-page.js"></script>

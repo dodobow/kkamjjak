@@ -1,4 +1,5 @@
 import { EVENTS, STORAGE_KEYS } from "./constants.js";
+import { getEventContentItems } from "./content.js";
 
 function getFromStorage(keys) {
   return new Promise((resolve, reject) => {
@@ -28,21 +29,53 @@ function setToStorage(items) {
   });
 }
 
-function createEmptyEntry() {
+function createEmptySubItemEntry() {
   return {
+    discovered: false,
+    firstDiscoveredAt: null,
+    lastDiscoveredAt: null,
+    count: 0,
+    lastAssetId: null
+  };
+}
+
+function normalizeSubItems(eventId, rawSubItems = {}) {
+  return getEventContentItems(eventId).reduce((items, item) => {
+    items[item.id] = {
+      ...createEmptySubItemEntry(),
+      ...(rawSubItems[item.id] || {})
+    };
+    return items;
+  }, {});
+}
+
+function createEmptyEntry(eventId) {
+  const entry = {
     discovered: false,
     firstDiscoveredAt: null,
     lastDiscoveredAt: null,
     count: 0
   };
+
+  if (getEventContentItems(eventId).length) {
+    entry.subItems = normalizeSubItems(eventId);
+  }
+
+  return entry;
 }
 
 function normalizeCollection(rawCollection = {}) {
   return EVENTS.reduce((collection, event) => {
+    const rawEntry = rawCollection[event.id] || {};
     collection[event.id] = {
-      ...createEmptyEntry(),
-      ...(rawCollection[event.id] || {})
+      ...createEmptyEntry(event.id),
+      ...rawEntry
     };
+
+    if (getEventContentItems(event.id).length) {
+      collection[event.id].subItems = normalizeSubItems(event.id, rawEntry.subItems);
+    }
+
     return collection;
   }, {});
 }
@@ -59,7 +92,7 @@ export async function getCollectionData() {
   return collection;
 }
 
-export async function updateEventDiscovery(eventId) {
+export async function updateEventDiscovery(eventId, contentSelection = null) {
   if (!EVENTS.some((event) => event.id === eventId)) {
     throw new Error(`Unknown eventId: ${eventId}`);
   }
@@ -69,18 +102,34 @@ export async function updateEventDiscovery(eventId) {
   const now = Date.now();
   const previous = collection[eventId];
   const isNewDiscovery = !previous.discovered;
+  const subItemId = contentSelection?.itemId;
+  const previousSubItem = subItemId ? previous.subItems?.[subItemId] : null;
+  const isNewSubItemDiscovery = Boolean(subItemId && !previousSubItem?.discovered);
 
   collection[eventId] = {
+    ...previous,
     discovered: true,
     firstDiscoveredAt: previous.firstDiscoveredAt || now,
     lastDiscoveredAt: now,
     count: (previous.count || 0) + 1
   };
 
+  if (subItemId && previousSubItem) {
+    collection[eventId].subItems[subItemId] = {
+      ...previousSubItem,
+      discovered: true,
+      firstDiscoveredAt: previousSubItem.firstDiscoveredAt || now,
+      lastDiscoveredAt: now,
+      count: (previousSubItem.count || 0) + 1,
+      lastAssetId: contentSelection.assetId || previousSubItem.lastAssetId
+    };
+  }
+
   await setToStorage({ [STORAGE_KEYS.collection]: collection });
 
   return {
     isNewDiscovery,
+    isNewSubItemDiscovery,
     entry: collection[eventId]
   };
 }
@@ -115,12 +164,28 @@ export async function clearCooldownForDebug() {
 export async function unlockAllEventsForDebug() {
   const now = Date.now();
   const collection = EVENTS.reduce((result, event) => {
-    result[event.id] = {
+    const entry = {
       discovered: true,
       firstDiscoveredAt: now,
       lastDiscoveredAt: now,
       count: 1
     };
+
+    const contentItems = getEventContentItems(event.id);
+    if (contentItems.length) {
+      entry.subItems = contentItems.reduce((subItems, item) => {
+        subItems[item.id] = {
+          discovered: true,
+          firstDiscoveredAt: now,
+          lastDiscoveredAt: now,
+          count: 1,
+          lastAssetId: item.assets[0]?.id || null
+        };
+        return subItems;
+      }, {});
+    }
+
+    result[event.id] = entry;
     return result;
   }, {});
 
