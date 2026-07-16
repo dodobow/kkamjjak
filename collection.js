@@ -6,10 +6,15 @@ import {
   formatProbabilityLabel
 } from "./src/constants.js";
 import { getEventContent, getEventContentItems } from "./src/content.js";
+import {
+  CONTENT_PREFERENCE_CHANGE_EVENT,
+  initContentPreference
+} from "./src/content-preference.js";
 import { executeEventById } from "./src/effects.js";
 import { initTheme } from "./src/theme.js";
 import {
   clearCooldownForDebug,
+  getContentNoRepeatEnabled,
   getCollectionData,
   getProgress,
   resetCollectionForDebug,
@@ -31,6 +36,7 @@ const elements = {
 };
 
 let collection = {};
+let contentNoRepeatEnabled = true;
 const pageParams = new URLSearchParams(location.search);
 let replayTargetTabId = Number(pageParams.get("targetTabId")) || null;
 
@@ -135,11 +141,11 @@ function createContentItemList(event, entry) {
   ).length;
   const container = document.createElement("div");
   container.className = "content-item-list";
-  container.setAttribute("aria-label", `${event.name} 하위 항목`);
+  container.setAttribute("aria-label", `${event.name} 종류`);
 
   const heading = document.createElement("div");
   heading.className = "content-item-heading";
-  heading.innerHTML = `<strong>하위 항목</strong><span>${discoveredCount} / ${content.items.length}</span>`;
+  heading.innerHTML = `<strong>종류</strong><span>${discoveredCount} / ${content.items.length}</span>`;
   container.append(heading);
 
   content.items.forEach((item) => {
@@ -169,10 +175,14 @@ function createContentItemList(event, entry) {
     const name = document.createElement("strong");
     const count = document.createElement("span");
     const itemProbability = event.probability / content.items.length;
-    name.textContent = isDiscovered ? item.name : "미발견 항목";
-    count.textContent = isDiscovered
-      ? `${formatProbabilityLabel(itemProbability)} · ${subItemEntry.count || 0}회 발견`
-      : `${formatProbabilityLabel(itemProbability)} · 아직 미발견`;
+    name.textContent = isDiscovered ? item.name : "아직 미발견";
+    count.textContent = contentNoRepeatEnabled
+      ? isDiscovered
+        ? `${subItemEntry.count || 0}회 발견`
+        : "아직 미발견"
+      : isDiscovered
+        ? `${formatProbabilityLabel(itemProbability)} · ${subItemEntry.count || 0}회 발견`
+        : `${formatProbabilityLabel(itemProbability)} · 아직 미발견`;
     detail.append(name, count);
 
     const replayButton = document.createElement("button");
@@ -182,7 +192,7 @@ function createContentItemList(event, entry) {
     replayButton.dataset.contentItemId = item.id;
     replayButton.disabled = !isDiscovered;
     replayButton.textContent = "다시 보기";
-    replayButton.setAttribute("aria-label", `${isDiscovered ? item.name : "미발견 항목"} 다시 보기`);
+    replayButton.setAttribute("aria-label", `${isDiscovered ? item.name : "아직 미발견"} 다시 보기`);
 
     row.append(preview, detail, replayButton);
     container.append(row);
@@ -198,10 +208,10 @@ function createEventCard(event) {
   card.className = `event-card${isDiscovered ? "" : " locked"}`;
 
   const title = isDiscovered ? event.fullName : "???";
-  const name = isDiscovered ? event.name : "아직 만나지 못한 장면입니다.";
+  const name = isDiscovered ? event.name : "아직 나오지 않았습니다.";
   const description = isDiscovered
     ? event.description
-    : "다음 한 장에서 만날 수 있어요.";
+    : "다음에 나올 수도 있습니다.";
 
   card.innerHTML = `
     <div class="card-top">
@@ -231,7 +241,7 @@ function createEventCard(event) {
   replayButton.type = "button";
   replayButton.dataset.eventId = event.id;
   replayButton.disabled = !isDiscovered;
-  replayButton.textContent = isDiscovered ? "한 번 더 보기" : "아직 미발견";
+  replayButton.textContent = isDiscovered ? "다시 보기" : "아직 미발견";
   card.append(replayButton);
 
   return card;
@@ -263,29 +273,29 @@ async function replayEvent(eventId, contentItemId = null) {
   const entry = collection[eventId];
 
   if (!event) {
-    setStatus("이 장면을 찾지 못했어요.", "error");
+    setStatus("결과를 찾지 못했습니다.", "error");
     return;
   }
 
   if (!entry?.discovered) {
-    setStatus("아직 만나지 못한 장면이에요.");
+    setStatus("아직 발견하지 않은 결과입니다.");
     return;
   }
 
   const subItemEntry = contentItemId ? entry.subItems?.[contentItemId] : null;
   if (contentItemId && !subItemEntry?.discovered) {
-    setStatus("아직 만나지 못한 하위 항목이에요.");
+    setStatus("아직 발견하지 않은 종류입니다.");
     return;
   }
 
   const targetTabId = event.target === "page" ? await resolveReplayTargetTabId() : null;
 
   if (event.target === "page" && !targetTabId) {
-    setStatus("장면을 보여줄 일반 웹페이지 탭을 찾지 못했어요.", "error");
+    setStatus("실행할 웹페이지 탭을 찾지 못했습니다.", "error");
     return;
   }
 
-  setStatus(`${event.fullName} 장면을 다시 펼치는 중...`, "loading");
+  setStatus(`${event.fullName} 다시 여는 중...`, "loading");
   const result = await executeEventById(eventId, {
     targetTabId,
     focusTargetTab: event.target === "page" && Boolean(targetTabId),
@@ -295,8 +305,8 @@ async function replayEvent(eventId, contentItemId = null) {
   setStatus(
     result.ok
       ? event.target === "page"
-        ? "원래 웹 탭에서 장면을 다시 보여드렸어요."
-        : "새 탭에서 장면을 다시 열었어요."
+        ? "원래 탭에서 다시 실행했습니다."
+        : "새 탭에서 다시 열었습니다."
       : result.userMessage,
     result.ok ? "success" : "error"
   );
@@ -304,11 +314,13 @@ async function replayEvent(eventId, contentItemId = null) {
 
 async function refresh() {
   try {
-    const [progress, collectionData] = await Promise.all([
+    const [progress, collectionData, noRepeatEnabled] = await Promise.all([
       getProgress(),
-      getCollectionData()
+      getCollectionData(),
+      getContentNoRepeatEnabled()
     ]);
 
+    contentNoRepeatEnabled = noRepeatEnabled;
     collection = createDevUnlockedCollection(collectionData);
     const discoveredCount = EVENTS.filter((event) => collection[event.id]?.discovered).length;
     elements.totalProgress.textContent = `${discoveredCount} / ${progress.totalCount}`;
@@ -317,11 +329,18 @@ async function refresh() {
     renderEvents(stats);
   } catch (error) {
     console.error("collection refresh failed", error);
-    setStatus("도감을 불러오는 중 잠시 문제가 생겼어요.", "error");
+    setStatus("도감을 불러오지 못했습니다.", "error");
   }
 }
 
 function bindEvents() {
+  window.addEventListener(CONTENT_PREFERENCE_CHANGE_EVENT, (event) => {
+    contentNoRepeatEnabled = event.detail.enabled;
+    if (Object.keys(collection).length) {
+      renderEvents(getCategoryStats(collection));
+    }
+  });
+
   elements.eventSections.addEventListener("click", (event) => {
     const button = event.target.closest(".replay-button, .content-replay-button");
     if (!button) return;
@@ -337,29 +356,30 @@ function bindEvents() {
 
       if (action === "unlock") {
         await unlockAllEventsForDebug();
-      setStatus("모든 장면을 도감에서 볼 수 있게 했어요.", "success");
+      setStatus("모든 결과를 도감에 표시했습니다.", "success");
       }
 
       if (action === "reset") {
         await resetCollectionForDebug();
-      setStatus("도감을 비우고 새 기록을 기다리고 있어요.", "success");
+      setStatus("도감 기록을 초기화했습니다.", "success");
       }
 
       if (action === "cooldown") {
         await clearCooldownForDebug();
-      setStatus("다음 한 장을 바로 열 수 있어요.", "success");
+      setStatus("지금 다시 열 수 있습니다.", "success");
       }
 
       await refresh();
     } catch (error) {
       console.error("debug action failed", error);
-      setStatus("개발자 동작 중 잠시 문제가 생겼어요.", "error");
+      setStatus("개발자 기능을 실행하지 못했습니다.", "error");
     }
   });
 }
 
 function init() {
   void initTheme();
+  void initContentPreference();
   document.title = `${APP_NAME} 도감`;
   elements.title.textContent = `${APP_NAME} 도감`;
   bindEvents();
@@ -371,9 +391,9 @@ function init() {
   refresh();
 
   if (replayTargetTabId) {
-    setStatus("한 번 더 보기를 누르면 도감을 열었던 웹 탭에서 장면을 보여드려요.");
+    setStatus("다시 보기를 누르면 도감을 열었던 웹페이지에서 실행됩니다.");
   } else {
-    setStatus("웹페이지에서 확장 아이콘으로 도감을 열면 장면을 한 번 더 보기 좋아요.");
+    setStatus("웹페이지에서 확장 아이콘으로 도감을 열면 다시 보기를 사용할 수 있습니다.");
   }
 }
 

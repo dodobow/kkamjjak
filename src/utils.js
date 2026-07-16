@@ -82,7 +82,7 @@ export function getFriendlyExecutionError(message = "") {
     message.includes("chrome://") ||
     message.includes("Cannot access contents")
   ) {
-    return "이 페이지에서는 버튼의 힘이 통하지 않습니다.";
+    return "이 페이지에서는 실행할 수 없습니다.";
   }
 
   return "오류가 발생했습니다. 다시 시도해 주세요.";

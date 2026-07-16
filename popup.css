@@ -46,6 +46,16 @@ h1 {
   word-break: keep-all;
 }
 
+.content-preference {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
+.content-preference .theme-toggle {
+  min-height: 2rem;
+}
+
 .button-zone {
   margin-top: 1.75rem;
 }

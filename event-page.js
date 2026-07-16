@@ -17,11 +17,11 @@ function getRuntimeUrl(path) {
 }
 
 const oracleLines = [
-  "오늘의 한마디: 작은 호기심은 뜻밖의 장면을 데려옵니다.",
-  "무작위성은 늘 다음 장을 조용히 준비합니다.",
-  "이 탭은 잠깐의 숨 돌림을 선물합니다.",
-  "확률은 가볍고, 다음 장면은 가까이에 있습니다.",
-  "방금 당신은 작지만 즐거운 기록을 하나 만들었습니다."
+  "미루는 데도 체력이 듭니다.",
+  "냉장고를 다시 열어도 없던 음식은 생기지 않습니다.",
+  "할 일은 줄지 않았지만 일단 물은 마셨습니다.",
+  "오늘의 선택이 꼭 중요한 선택일 필요는 없습니다.",
+  "이 문장에는 별다른 뜻이 없습니다."
 ];
 
 function setMessageLines(message, lines) {
@@ -107,15 +107,15 @@ function renderScene(event, selection) {
 
 function render() {
   document.title = event ? `${APP_NAME} - ${event.name}` : APP_NAME;
-  document.querySelector("#categoryText").textContent = event?.category || "새 탭 이벤트";
-  document.querySelector("#eventTitle").textContent = event?.name || "알 수 없는 이벤트";
+  document.querySelector("#categoryText").textContent = event?.category || "새 탭";
+  document.querySelector("#eventTitle").textContent = event?.name || "결과 없음";
 
   const message = document.querySelector("#eventMessage");
   const oracleBox = document.querySelector("#oracleBox");
 
   if (!event) {
-    message.textContent = "장면을 찾지 못했어요. 잠시 후 다시 열어 보세요.";
-    oracleBox.textContent = "이 탭은 외부 사이트가 아니라 확장프로그램 내부 페이지입니다.";
+    message.textContent = "결과를 찾지 못했습니다.";
+    oracleBox.textContent = "이 페이지는 확장 프로그램 안에서 열렸습니다.";
     return;
   }
 
@@ -131,16 +131,13 @@ function render() {
   }
 
   if (event.id === "meaningless_oracle") {
-    setMessageLines(message, [
-      "오늘의 엉뚱한 한마디가",
-      "도착했습니다."
-    ]);
+    setMessageLines(message, ["오늘의 한마디"]);
     oracleBox.textContent = oracleLines[Math.floor(Math.random() * oracleLines.length)];
     return;
   }
 
   message.textContent = event.description;
-  oracleBox.textContent = "새로운 장면이 열렸습니다.";
+  oracleBox.textContent = "결과를 불러왔습니다.";
 }
 
 document.querySelector("#closeButton").addEventListener("click", () => {

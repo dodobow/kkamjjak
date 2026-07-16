@@ -1,5 +1,5 @@
 import { EVENTS, STORAGE_KEYS } from "./constants.js";
-import { getEventContentItems } from "./content.js";
+import { getEventContentItems, selectEventContent } from "./content.js";
 
 function getFromStorage(keys) {
   return new Promise((resolve, reject) => {
@@ -80,6 +80,22 @@ function normalizeCollection(rawCollection = {}) {
   }, {});
 }
 
+function normalizeDrawState(eventId, rawState = {}) {
+  const validItemIds = new Set(getEventContentItems(eventId).map((item) => item.id));
+  const remainingItemIds = Array.isArray(rawState.remainingItemIds)
+    ? [...new Set(rawState.remainingItemIds)].filter((itemId) => validItemIds.has(itemId))
+    : [];
+
+  return {
+    remainingItemIds,
+    lastItemId: validItemIds.has(rawState.lastItemId) ? rawState.lastItemId : null
+  };
+}
+
+function pickRandomItem(items, random) {
+  return items[Math.floor(random() * items.length)] || null;
+}
+
 export async function getCollectionData() {
   const items = await getFromStorage(STORAGE_KEYS.collection);
   const storedCollection = items[STORAGE_KEYS.collection];
@@ -92,12 +108,68 @@ export async function getCollectionData() {
   return collection;
 }
 
+export async function getContentNoRepeatEnabled() {
+  const items = await getFromStorage({ [STORAGE_KEYS.contentNoRepeat]: true });
+  return items[STORAGE_KEYS.contentNoRepeat] !== false;
+}
+
+export async function setContentNoRepeatEnabled(enabled) {
+  await setToStorage({
+    [STORAGE_KEYS.contentNoRepeat]: Boolean(enabled),
+    [STORAGE_KEYS.contentDrawState]: {}
+  });
+}
+
+export async function selectContentForDraw(eventId, random = Math.random) {
+  const contentItems = getEventContentItems(eventId);
+  if (!contentItems.length) return null;
+
+  const items = await getFromStorage({
+    [STORAGE_KEYS.collection]: {},
+    [STORAGE_KEYS.contentNoRepeat]: true,
+    [STORAGE_KEYS.contentDrawState]: {}
+  });
+  const noRepeatEnabled = items[STORAGE_KEYS.contentNoRepeat] !== false;
+
+  if (!noRepeatEnabled) {
+    return selectEventContent(eventId, null, null, random);
+  }
+
+  const collection = normalizeCollection(items[STORAGE_KEYS.collection]);
+  const undiscoveredItems = contentItems.filter(
+    (item) => !collection[eventId]?.subItems?.[item.id]?.discovered
+  );
+  let candidates = undiscoveredItems;
+
+  if (!candidates.length) {
+    const drawState = normalizeDrawState(
+      eventId,
+      items[STORAGE_KEYS.contentDrawState]?.[eventId]
+    );
+    const remainingIds = new Set(drawState.remainingItemIds);
+    candidates = contentItems.filter((item) => remainingIds.has(item.id));
+
+    if (!candidates.length) {
+      candidates = contentItems.length > 1
+        ? contentItems.filter((item) => item.id !== drawState.lastItemId)
+        : contentItems;
+    }
+  }
+
+  const selectedItem = pickRandomItem(candidates, random);
+  return selectEventContent(eventId, selectedItem?.id, null, random);
+}
+
 export async function updateEventDiscovery(eventId, contentSelection = null) {
   if (!EVENTS.some((event) => event.id === eventId)) {
     throw new Error(`Unknown eventId: ${eventId}`);
   }
 
-  const items = await getFromStorage({ [STORAGE_KEYS.collection]: {} });
+  const items = await getFromStorage({
+    [STORAGE_KEYS.collection]: {},
+    [STORAGE_KEYS.contentNoRepeat]: true,
+    [STORAGE_KEYS.contentDrawState]: {}
+  });
   const collection = normalizeCollection(items[STORAGE_KEYS.collection]);
   const now = Date.now();
   const previous = collection[eventId];
@@ -105,9 +177,14 @@ export async function updateEventDiscovery(eventId, contentSelection = null) {
   const subItemId = contentSelection?.itemId;
   const previousSubItem = subItemId ? previous.subItems?.[subItemId] : null;
   const isNewSubItemDiscovery = Boolean(subItemId && !previousSubItem?.discovered);
+  const contentItemIds = getEventContentItems(eventId).map((item) => item.id);
+  const allPreviouslyDiscovered = contentItemIds.length > 0 && contentItemIds.every(
+    (itemId) => previous.subItems?.[itemId]?.discovered
+  );
 
   collection[eventId] = {
     ...previous,
+    ...(previous.subItems ? { subItems: { ...previous.subItems } } : {}),
     discovered: true,
     firstDiscoveredAt: previous.firstDiscoveredAt || now,
     lastDiscoveredAt: now,
@@ -125,7 +202,25 @@ export async function updateEventDiscovery(eventId, contentSelection = null) {
     };
   }
 
-  await setToStorage({ [STORAGE_KEYS.collection]: collection });
+  const updates = { [STORAGE_KEYS.collection]: collection };
+  const noRepeatEnabled = items[STORAGE_KEYS.contentNoRepeat] !== false;
+
+  if (subItemId && previousSubItem && noRepeatEnabled) {
+    const drawStates = { ...(items[STORAGE_KEYS.contentDrawState] || {}) };
+    const drawState = normalizeDrawState(eventId, drawStates[eventId]);
+    const remainingItemIds = allPreviouslyDiscovered
+      ? (drawState.remainingItemIds.length ? drawState.remainingItemIds : contentItemIds)
+        .filter((itemId) => itemId !== subItemId)
+      : [];
+
+    drawStates[eventId] = {
+      remainingItemIds,
+      lastItemId: subItemId
+    };
+    updates[STORAGE_KEYS.contentDrawState] = drawStates;
+  }
+
+  await setToStorage(updates);
 
   return {
     isNewDiscovery,
@@ -189,13 +284,19 @@ export async function unlockAllEventsForDebug() {
     return result;
   }, {});
 
-  await setToStorage({ [STORAGE_KEYS.collection]: collection });
+  await setToStorage({
+    [STORAGE_KEYS.collection]: collection,
+    [STORAGE_KEYS.contentDrawState]: {}
+  });
   return collection;
 }
 
 export async function resetCollectionForDebug() {
   const collection = normalizeCollection({});
-  await setToStorage({ [STORAGE_KEYS.collection]: collection });
+  await setToStorage({
+    [STORAGE_KEYS.collection]: collection,
+    [STORAGE_KEYS.contentDrawState]: {}
+  });
   await setLastResult(null);
   return collection;
 }

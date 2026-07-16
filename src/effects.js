@@ -70,7 +70,7 @@ function createContentSelection(eventId, options = {}) {
 
 export async function executeEvent(event, options = {}) {
   if (!event) {
-    return { ok: false, userMessage: "이벤트를 찾을 수 없습니다." };
+    return { ok: false, userMessage: "결과를 찾을 수 없습니다." };
   }
 
   try {
@@ -97,7 +97,7 @@ export async function executeEvent(event, options = {}) {
         ok: false,
         userMessage: options.targetTabId
           ? "재생할 웹페이지 탭을 찾을 수 없습니다."
-          : "일반 웹페이지에서만 버튼이 작동합니다."
+          : "일반 웹페이지에서만 실행할 수 있습니다."
       };
     }
 
@@ -129,23 +129,16 @@ function runInjectedEffect(eventId, effectData) {
   const STATE_KEY = "__dopamine_button_effect_state__";
   const state = window[STATE_KEY] || {
     timers: [],
-    restorers: [],
-    audioContexts: []
+    restorers: []
   };
   window[STATE_KEY] = state;
 
   const randomFrom = (items) => items[Math.floor(Math.random() * items.length)];
 
-  const closeAudioContext = (context) => {
-    state.audioContexts = state.audioContexts.filter((item) => item !== context);
-    context.close().catch(() => {});
-  };
-
   const removeExisting = () => {
     state.timers.forEach((timer) => window.clearTimeout(timer));
     state.timers = [];
     state.restorers.splice(0).reverse().forEach((restore) => restore());
-    state.audioContexts.splice(0).forEach((context) => context.close().catch(() => {}));
     document.getElementById(EFFECT_ROOT_ID)?.remove();
     document.getElementById(STYLE_ID)?.remove();
     document.documentElement.classList.remove(
@@ -208,52 +201,6 @@ function runInjectedEffect(eventId, effectData) {
       @keyframes dbMessagePop { from { opacity: 0; transform: translate(-50%, -45%) scale(.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
     `);
     if (delay) cleanupLater(delay);
-  };
-
-  const playTone = (notes) => {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) {
-      overlayMessage("소리가 나야 했는데 브라우저가 조용함을 선택했습니다.");
-      return;
-    }
-
-    const context = new AudioContext();
-    state.audioContexts.push(context);
-    context.resume().catch(() => {});
-
-    const start = context.currentTime + .03;
-    const compressor = context.createDynamicsCompressor();
-    compressor.threshold.value = -18;
-    compressor.knee.value = 18;
-    compressor.ratio.value = 8;
-    compressor.connect(context.destination);
-
-    const master = context.createGain();
-    master.gain.setValueAtTime(.0001, start);
-    master.gain.exponentialRampToValueAtTime(.3, start + .04);
-    master.gain.exponentialRampToValueAtTime(.0001, start + 2.2);
-    master.connect(compressor);
-
-    notes.forEach((note, index) => {
-      const at = start + index * .22;
-      const duration = index === notes.length - 1 ? .46 : .25;
-      ["triangle", "sine"].forEach((type, layer) => {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.type = type;
-        oscillator.frequency.setValueAtTime(note * (layer ? 2 : 1), at);
-        oscillator.detune.value = layer ? 4 : -3;
-        gain.gain.setValueAtTime(.0001, at);
-        gain.gain.exponentialRampToValueAtTime(layer ? .13 : .27, at + .025);
-        gain.gain.exponentialRampToValueAtTime(.0001, at + duration);
-        oscillator.connect(gain);
-        gain.connect(master);
-        oscillator.start(at);
-        oscillator.stop(at + duration + .03);
-      });
-    });
-
-    schedule(() => closeAudioContext(context), 2500);
   };
 
   removeExisting();
@@ -403,7 +350,7 @@ function runInjectedEffect(eventId, effectData) {
 
     case "odd_stamp": {
       const root = createRoot("db-stamp");
-      root.textContent = randomFrom(["오늘의 표시", "좋은 징조", "다음 장면", "작은 발견"]);
+      root.textContent = randomFrom(["확인", "통과", "보류", "다음에"]);
       root.style.setProperty("--stamp-x", `${12 + Math.random() * 76}vw`);
       root.style.setProperty("--stamp-y", `${14 + Math.random() * 72}vh`);
       root.style.setProperty("--stamp-r", `${-32 + Math.random() * 64}deg`);
@@ -414,16 +361,6 @@ function runInjectedEffect(eventId, effectData) {
       cleanupLater(5000);
       break;
     }
-
-    case "mystery_sound":
-      playTone([220, 293.66, 233.08, 440, 155.56]);
-      overlayMessage("띠로롱. 작은 행운이 지나갔습니다.", 3000);
-      break;
-
-    case "failed_fanfare":
-      playTone([523.25, 659.25, 783.99, 1046.5, 155.56]);
-      overlayMessage("팡파르가 마지막 음에서 살짝 웃었습니다.", 3600);
-      break;
 
     case "tone_pollution": {
       const candidates = Array.from(document.querySelectorAll("p, h1, h2, h3, h4, h5, h6, li, blockquote, figcaption, td, th"))
@@ -438,11 +375,11 @@ function runInjectedEffect(eventId, effectData) {
       const changedNodes = candidates.map((node, index) => {
         const originalText = node.textContent;
         node.dataset.dopamineOriginalText = originalText;
-        node.textContent = `${randomFrom(["오늘의 메모:", "참고로", "작은 소식:", "한마디 덧붙이면:"])} ${originalText.trim().slice(0, 88)} ${[
-          "왠지 좋은 예감입니다.",
-          "다음 장면도 궁금하네요.",
-          "작은 행운을 덧붙입니다.",
-          "...라고 속삭입니다."
+        node.textContent = `${randomFrom(["아무튼", "근데 말인데", "일단", "그리고"])} ${originalText.trim().slice(0, 88)} ${[
+          "그렇다고 합니다.",
+          "아마도요.",
+          "정확하진 않습니다.",
+          "여기까지입니다."
         ][index % 4]}`;
         return [node, originalText];
       });
@@ -454,27 +391,27 @@ function runInjectedEffect(eventId, effectData) {
           }
         });
       });
-      overlayMessage(`페이지의 문장 ${changedNodes.length}개에 작은 한마디가 더해졌습니다.`, 5600);
+      overlayMessage(`문장 ${changedNodes.length}개를 바꿨습니다. 새로고침하면 돌아옵니다.`, 5600);
       break;
     }
 
     case "button_mockery":
       overlayMessage(randomFrom([
-        "다음에는 어떤 장면이 나올까요?",
-        "호기심은 늘 좋은 출발입니다.",
-        "오늘의 한 장을 골랐습니다."
+        "여기까지 눌렀으면 됐습니다.",
+        "정답은 없고 결과만 있습니다.",
+        "한 시간 뒤에 또 봅시다."
       ]), 4600, true);
       break;
 
     case "nothing_happened":
-      schedule(() => console.info("도파민 버튼: Nothing 이벤트가 정상적으로 아무 일도 하지 않았습니다."), 250);
+      schedule(() => console.info("깜짝!: Nothing 이벤트가 정상적으로 아무 일도 하지 않았습니다."), 250);
       break;
 
     case "delayed_disaster":
-      overlayMessage("잠시만요...", 0);
+      overlayMessage("아직입니다...", 0);
       schedule(() => {
         const root = createRoot("db-catastrophe");
-        root.innerHTML = "<span>조금 늦었지만,<br>깜짝 장면이 도착했어요.</span>";
+        root.innerHTML = "<span>이제 나옵니다.</span>";
         addStyle(`
           html.db-disaster { filter: hue-rotate(150deg) saturate(2.1) contrast(1.38); }
           html.db-disaster body { animation: dbCatastrophe .11s linear 30; transform-origin: center; will-change: transform; }
@@ -498,7 +435,7 @@ function runInjectedEffect(eventId, effectData) {
         @keyframes dbJudgementSpin { to { transform: rotate(1turn); } }
       `);
       document.documentElement.classList.add("db-judgement");
-      createRoot("db-judgement-root").innerHTML = "<span>버튼의<br>선택</span>";
+      createRoot("db-judgement-root").innerHTML = "<span>한꺼번에</span>";
       cleanupLater(6800);
       break;
 

@@ -1,26 +1,26 @@
-export const APP_NAME = "도파민 버튼";
-export const APP_DESCRIPTION = "오늘은 어떤 작은 우연을 만나게 될까요?";
+export const APP_NAME = "깜짝!";
+export const APP_DESCRIPTION = "한 시간마다 한 번씩 열어볼 수 있습니다.";
 //export const COOLDOWN_MS = 60 * 60 * 1000;
 export const COOLDOWN_MS = 1 * 1000;
 export const COOLDOWN_ALARM_NAME = "dopamine_button_cooldown_ready";
 export const DEV_UNLOCK_ALL_EVENTS = false;
 export const DEV_SHOW_DEBUG_TOOLS = true;
 
-export const NOTIFICATION_TITLE = "다음 한 장이 준비됐어요";
-export const NOTIFICATION_MESSAGE =
-  "호기심이 이끄는 대로, 새로운 장면을 열어 보세요.";
+export const NOTIFICATION_TITLE = "다시 열 수 있어요";
+export const NOTIFICATION_MESSAGE = "깜짝!이 다시 준비됐습니다.";
 
 export const STORAGE_KEYS = {
   collection: "collection",
   cooldown: "cooldown",
   lastResult: "lastResult",
+  contentNoRepeat: "contentNoRepeat",
+  contentDrawState: "contentDrawState",
   theme: "theme"
 };
 
 export const CATEGORIES = [
   "웹페이지 변화",
   "이미지",
-  "사운드",
   "새 탭",
   "텍스트",
   "기타",
@@ -55,7 +55,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "빙글빙글",
     fullName: "웹페이지 변화 - 빙글빙글",
-    description: "현재 페이지가 잠깐 회전합니다.",
+    description: "페이지가 한 바퀴 돌았다가 돌아옵니다.",
     rarity: "Common",
     target: "page"
   },
@@ -64,7 +64,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "브라우저 지진",
     fullName: "웹페이지 변화 - 브라우저 지진",
-    description: "페이지가 몇 초 동안 덜덜 흔들립니다.",
+    description: "페이지가 잠깐 흔들립니다.",
     rarity: "Common",
     target: "page"
   },
@@ -73,7 +73,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "색감 뒤집기",
     fullName: "웹페이지 변화 - 색감 뒤집기",
-    description: "화면의 색감이 잠깐 뒤집혀 새로운 분위기를 만듭니다.",
+    description: "페이지 색상이 잠깐 반전됩니다.",
     rarity: "Rare",
     target: "page"
   },
@@ -89,8 +89,8 @@ const EVENT_DEFINITIONS = [
   {
     id: "blur_truth",
     category: "웹페이지 변화",
-    name: "흐릿한 진실",
-    fullName: "웹페이지 변화 - 흐릿한 진실",
+    name: "액정에 습기가..",
+    fullName: "웹페이지 변화 - 액정에 습기가..",
     description: "모든 것이 살짝 흐려집니다.",
     rarity: "Common",
     target: "page"
@@ -127,15 +127,15 @@ const EVENT_DEFINITIONS = [
     category: "이미지",
     name: "발견",
     fullName: "이미지 - 발견",
-    description: "무언가가 화면에 나타납니다.",
+    description: "동물이나 공룡 하나가 나타납니다.",
     rarity: "Common",
     target: "page"
   },
   {
     id: "giant_emoji",
     category: "이미지",
-    name: "거대 이모지 습격",
-    fullName: "이미지 - 거대 이모지 습격",
+    name: "빅 이모지",
+    fullName: "이미지 - 빅 이모지",
     description: "큰 이모지가 화면 중앙을 장악합니다.",
     rarity: "Rare",
     target: "page"
@@ -143,36 +143,18 @@ const EVENT_DEFINITIONS = [
   {
     id: "odd_stamp",
     category: "이미지",
-    name: "수상한 표식",
-    fullName: "이미지 - 수상한 표식",
-    description: "정체를 알 수 없는 도장이 화면에 찍힙니다.",
-    rarity: "Epic",
-    target: "page"
-  },
-  {
-    id: "mystery_sound",
-    category: "사운드",
-    name: "정체불명의 효과음",
-    fullName: "사운드 - 정체불명의 효과음",
-    description: "외부 파일 없이 짧고 낯선 효과음이 재생됩니다.",
-    rarity: "Common",
-    target: "page"
-  },
-  {
-    id: "failed_fanfare",
-    category: "사운드",
-    name: "삐끗한 팡파르",
-    fullName: "사운드 - 삐끗한 팡파르",
-    description: "조금 삐끗하지만 기분 좋은 팡파르가 울립니다.",
+    name: "도장 쾅",
+    fullName: "이미지 - 도장 쾅",
+    description: "화면 아무 데나 도장이 하나 찍힙니다.",
     rarity: "Epic",
     target: "page"
   },
   {
     id: "tab_exile",
     category: "새 탭",
-    name: "작은 외출",
-    fullName: "새 탭 - 작은 외출",
-    description: "확장프로그램 내부의 작은 랜덤 탭으로 잠시 초대합니다.",
+    name: "랜선 여행",
+    fullName: "새 탭 - 랜선 여행",
+    description: "숲, 바다, 폭포 중 한 곳이 새 탭에서 열립니다.",
     rarity: "Rare",
     target: "tab"
   },
@@ -181,25 +163,25 @@ const EVENT_DEFINITIONS = [
     category: "새 탭",
     name: "오늘의 한마디",
     fullName: "새 탭 - 오늘의 한마디",
-    description: "새 탭에서 오늘의 엉뚱한 한마디를 보여줍니다.",
+    description: "새 탭에 문장 하나가 표시됩니다.",
     rarity: "Epic",
     target: "tab"
   },
   {
     id: "tone_pollution",
     category: "텍스트",
-    name: "말투 바꾸기",
-    fullName: "텍스트 - 말투 바꾸기",
-    description: "현재 페이지의 일부 문장에 엉뚱한 한마디가 더해집니다. 새로고침하면 복구됩니다.",
+    name: "누구세요?",
+    fullName: "텍스트 - 누구세요?",
+    description: "페이지 일부 문장이 바뀝니다. 새로고침하면 돌아옵니다.",
     rarity: "Epic",
     target: "page"
   },
   {
     id: "button_mockery",
     category: "텍스트",
-    name: "버튼의 한마디",
-    fullName: "텍스트 - 버튼의 한마디",
-    description: "버튼이 사용자의 호기심에 짧은 답장을 보냅니다.",
+    name: "포춘 쿠키",
+    fullName: "텍스트 - 포춘 쿠키",
+    description: "화면 중앙에 문장 하나가 나타납니다.",
     rarity: "Rare",
     target: "page"
   },
@@ -208,7 +190,7 @@ const EVENT_DEFINITIONS = [
     category: "기타",
     name: "Nothing",
     fullName: "기타 - Nothing",
-    description: "아무 일도 일어나지 않은 듯합니다. 다음 한 장은 다를지도 모릅니다.",
+    description: "정말 아무 일도 일어나지 않습니다.",
     rarity: "Legendary",
     target: "page"
   },
@@ -217,16 +199,16 @@ const EVENT_DEFINITIONS = [
     category: "기타",
     name: "늦게 온 선물",
     fullName: "기타 - 늦게 온 선물",
-    description: "처음에는 조용하다가 몇 초 뒤 작은 깜짝 장면이 도착합니다.",
+    description: "몇 초 뒤에 효과가 시작됩니다.",
     rarity: "Legendary",
     target: "page"
   },
   {
     id: "button_judgement",
     category: "특수 효과",
-    name: "버튼의 선택",
-    fullName: "특수 효과 - 버튼의 선택",
-    description: "화면 전체에 버튼이 고른 특별한 장면이 펼쳐집니다.",
+    name: "한꺼번에",
+    fullName: "특수 효과 - 한꺼번에",
+    description: "여러 효과가 한 번에 실행됩니다.",
     rarity: "Mythic",
     target: "page"
   }

@@ -6,6 +6,7 @@ import {
   EVENTS
 } from "./src/constants.js";
 import { getEventContentItem } from "./src/content.js";
+import { initContentPreference } from "./src/content-preference.js";
 import { executeEvent } from "./src/effects.js";
 import { initTheme } from "./src/theme.js";
 import {
@@ -18,6 +19,7 @@ import {
 } from "./src/utils.js";
 import {
   getCooldownData,
+  selectContentForDraw,
   getLastResult,
   getProgress,
   setCooldown,
@@ -58,10 +60,10 @@ function renderCooldown(nextAvailableAt) {
   const isCoolingDown = remainingMs > 0;
 
   elements.mainButton.disabled = isCoolingDown;
-  elements.mainButton.textContent = isCoolingDown ? "다음 한 장 준비 중" : "오늘의 한 장 열기";
+  elements.mainButton.textContent = isCoolingDown ? "준비 중" : "열어보기";
   elements.cooldownText.textContent = isCoolingDown
-    ? `다음 한 장까지 ${formatDuration(remainingMs)}`
-    : "새로운 한 장을 열 수 있어요";
+    ? `다시 열기까지 ${formatDuration(remainingMs)}`
+    : "지금 열 수 있어요";
 
   if (cooldownTimer) {
     clearInterval(cooldownTimer);
@@ -93,14 +95,14 @@ function renderProgress(progress) {
 
 function renderLastResult(result) {
   if (!result) {
-    elements.lastResultText.textContent = "아직 열어 본 장면이 없어요.";
+    elements.lastResultText.textContent = "아직 나온 결과가 없습니다.";
     elements.lastResultText.dataset.state = "empty";
     return;
   }
 
   const event = getEventById(result.eventId);
   if (!event) {
-    elements.lastResultText.textContent = "기록은 남아 있지만 장면을 찾지 못했어요.";
+    elements.lastResultText.textContent = "저장된 결과를 찾지 못했습니다.";
     elements.lastResultText.dataset.state = "error";
     return;
   }
@@ -108,7 +110,7 @@ function renderLastResult(result) {
   const contentItem = getEventContentItem(result.eventId, result.contentItemId);
   elements.lastResultText.dataset.state = "result";
   elements.lastResultText.innerHTML = `
-    <strong>${result.isNewDiscovery ? "새로운 장면 발견!" : "이미 만난 장면이에요."}</strong>
+    <strong>${result.isNewDiscovery ? "처음 나왔어요." : "전에 나온 결과예요."}</strong>
     [${event.rarity}] ${event.fullName}${contentItem ? ` · ${contentItem.name}` : ""}<br>
     <span>${formatTimestamp(result.triggeredAt)}</span>
   `;
@@ -127,23 +129,27 @@ async function refresh() {
     renderLastResult(lastResult);
   } catch (error) {
     console.error("popup refresh failed", error);
-    setStatus("기록을 읽는 중 잠시 문제가 생겼어요.", "error");
+    setStatus("기록을 불러오지 못했습니다.", "error");
   }
 }
 
 async function handleMainButtonClick() {
-  setStatus("오늘의 한 장을 고르는 중...", "loading");
+  setStatus("여는 중...", "loading");
 
   try {
     const cooldown = await getCooldownData();
     if (cooldown.nextAvailableAt > Date.now()) {
       renderCooldown(cooldown.nextAvailableAt);
-      setStatus("다음 한 장을 준비하고 있어요.");
+      setStatus("아직 준비 중이에요.");
       return;
     }
 
     const event = pickWeightedEvent(EVENTS);
-    const execution = await executeEvent(event);
+    const contentSelection = await selectContentForDraw(event.id);
+    const execution = await executeEvent(event, {
+      contentItemId: contentSelection?.itemId,
+      contentAssetId: contentSelection?.assetId
+    });
 
     if (!execution.ok) {
       setStatus(execution.userMessage, "error");
@@ -164,11 +170,11 @@ async function handleMainButtonClick() {
     await setCooldown(nextAvailableAt);
     await scheduleCooldownAlarm(nextAvailableAt);
 
-    setStatus("새 장면을 도감에 담았어요.", "success");
+    setStatus("도감에 새로 기록했어요.", "success");
     await refresh();
   } catch (error) {
     console.error("main button failed", error);
-    setStatus("잠시 문제가 생겼어요. 다시 한 장을 열어 주세요.", "error");
+    setStatus("열지 못했습니다. 다시 시도해 주세요.", "error");
   }
 }
 
@@ -194,6 +200,7 @@ async function openCollection() {
 
 function init() {
   void initTheme();
+  void initContentPreference();
   document.title = APP_NAME;
   elements.appName.textContent = APP_NAME;
   elements.appDescription.textContent = APP_DESCRIPTION;

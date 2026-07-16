@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "도파민 버튼",
-  "description": "오늘의 작은 우연을 열어 보는 랜덤 버튼입니다.",
+  "name": "깜짝!",
+  "description": "한 시간마다 한 번 열 수 있는 랜덤 상자입니다.",
   "version": "0.1.0",
   "action": {
-    "default_title": "도파민 버튼",
+    "default_title": "깜짝!",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "assets/icons/icon16.png",
