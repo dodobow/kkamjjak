@@ -1,4 +1,5 @@
 import {
+  APP_NAME,
   COOLDOWN_ALARM_NAME,
   NOTIFICATION_MESSAGE,
   NOTIFICATION_TITLE
@@ -25,5 +26,5 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.info("Dopamine button extension installed.");
+  console.info(`${APP_NAME} extension installed.`);
 });

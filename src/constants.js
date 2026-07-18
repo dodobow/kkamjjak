@@ -46,6 +46,7 @@ export const RARITY_WEIGHTS = {
 };
 
 export function formatProbabilityLabel(probability) {
+  if (probability === 0) return "0%";
   return `${probability.toFixed(2).replace(/0$/, "")}%`;
 }
 
@@ -127,7 +128,7 @@ const EVENT_DEFINITIONS = [
     category: "이미지",
     name: "발견",
     fullName: "이미지 - 발견",
-    description: "동물이나 공룡 하나가 나타납니다.",
+    description: "친구들이 깜짝 등장합니다.",
     rarity: "Common",
     target: "page"
   },

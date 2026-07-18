@@ -96,6 +96,34 @@ function pickRandomItem(items, random) {
   return items[Math.floor(random() * items.length)] || null;
 }
 
+function getContentEventIds() {
+  return EVENTS
+    .filter((event) => getEventContentItems(event.id).length)
+    .map((event) => event.id);
+}
+
+function normalizeContentNoRepeatPreferences(rawPreferences) {
+  const legacyEnabled = typeof rawPreferences === "boolean" ? rawPreferences : true;
+  const storedPreferences = rawPreferences && typeof rawPreferences === "object"
+    ? rawPreferences
+    : {};
+
+  return getContentEventIds().reduce((preferences, eventId) => {
+    preferences[eventId] = eventId in storedPreferences
+      ? storedPreferences[eventId] !== false
+      : legacyEnabled;
+    return preferences;
+  }, {});
+}
+
+function hasCurrentContentPreferences(rawPreferences) {
+  return Boolean(
+    rawPreferences
+    && typeof rawPreferences === "object"
+    && getContentEventIds().every((eventId) => typeof rawPreferences[eventId] === "boolean")
+  );
+}
+
 export async function getCollectionData() {
   const items = await getFromStorage(STORAGE_KEYS.collection);
   const storedCollection = items[STORAGE_KEYS.collection];
@@ -108,15 +136,40 @@ export async function getCollectionData() {
   return collection;
 }
 
-export async function getContentNoRepeatEnabled() {
-  const items = await getFromStorage({ [STORAGE_KEYS.contentNoRepeat]: true });
-  return items[STORAGE_KEYS.contentNoRepeat] !== false;
+export async function getContentNoRepeatPreferences() {
+  const items = await getFromStorage({ [STORAGE_KEYS.contentNoRepeat]: null });
+  const rawPreferences = items[STORAGE_KEYS.contentNoRepeat];
+  const preferences = normalizeContentNoRepeatPreferences(rawPreferences);
+
+  if (!hasCurrentContentPreferences(rawPreferences)) {
+    await setToStorage({ [STORAGE_KEYS.contentNoRepeat]: preferences });
+  }
+
+  return preferences;
 }
 
-export async function setContentNoRepeatEnabled(enabled) {
-  await setToStorage({
-    [STORAGE_KEYS.contentNoRepeat]: Boolean(enabled),
+export async function getContentNoRepeatEnabled(eventId) {
+  const preferences = await getContentNoRepeatPreferences();
+  return preferences[eventId] !== false;
+}
+
+export async function setContentNoRepeatEnabled(eventId, enabled) {
+  if (!getEventContentItems(eventId).length) {
+    throw new Error(`Event has no content items: ${eventId}`);
+  }
+
+  const items = await getFromStorage({
+    [STORAGE_KEYS.contentNoRepeat]: null,
     [STORAGE_KEYS.contentDrawState]: {}
+  });
+  const preferences = normalizeContentNoRepeatPreferences(items[STORAGE_KEYS.contentNoRepeat]);
+  const drawStates = { ...(items[STORAGE_KEYS.contentDrawState] || {}) };
+  preferences[eventId] = Boolean(enabled);
+  delete drawStates[eventId];
+
+  await setToStorage({
+    [STORAGE_KEYS.contentNoRepeat]: preferences,
+    [STORAGE_KEYS.contentDrawState]: drawStates
   });
 }
 
@@ -126,10 +179,12 @@ export async function selectContentForDraw(eventId, random = Math.random) {
 
   const items = await getFromStorage({
     [STORAGE_KEYS.collection]: {},
-    [STORAGE_KEYS.contentNoRepeat]: true,
+    [STORAGE_KEYS.contentNoRepeat]: null,
     [STORAGE_KEYS.contentDrawState]: {}
   });
-  const noRepeatEnabled = items[STORAGE_KEYS.contentNoRepeat] !== false;
+  const noRepeatEnabled = normalizeContentNoRepeatPreferences(
+    items[STORAGE_KEYS.contentNoRepeat]
+  )[eventId] !== false;
 
   if (!noRepeatEnabled) {
     return selectEventContent(eventId, null, null, random);
@@ -167,7 +222,7 @@ export async function updateEventDiscovery(eventId, contentSelection = null) {
 
   const items = await getFromStorage({
     [STORAGE_KEYS.collection]: {},
-    [STORAGE_KEYS.contentNoRepeat]: true,
+    [STORAGE_KEYS.contentNoRepeat]: null,
     [STORAGE_KEYS.contentDrawState]: {}
   });
   const collection = normalizeCollection(items[STORAGE_KEYS.collection]);
@@ -203,7 +258,9 @@ export async function updateEventDiscovery(eventId, contentSelection = null) {
   }
 
   const updates = { [STORAGE_KEYS.collection]: collection };
-  const noRepeatEnabled = items[STORAGE_KEYS.contentNoRepeat] !== false;
+  const noRepeatEnabled = normalizeContentNoRepeatPreferences(
+    items[STORAGE_KEYS.contentNoRepeat]
+  )[eventId] !== false;
 
   if (subItemId && previousSubItem && noRepeatEnabled) {
     const drawStates = { ...(items[STORAGE_KEYS.contentDrawState] || {}) };

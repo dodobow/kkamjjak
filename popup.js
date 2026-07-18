@@ -6,7 +6,6 @@ import {
   EVENTS
 } from "./src/constants.js";
 import { getEventContentItem } from "./src/content.js";
-import { initContentPreference } from "./src/content-preference.js";
 import { executeEvent } from "./src/effects.js";
 import { initTheme } from "./src/theme.js";
 import {
@@ -41,6 +40,7 @@ const elements = {
 };
 
 let cooldownTimer = null;
+let isOpening = false;
 
 function setStatus(message, state = "info") {
   elements.statusText.textContent = message;
@@ -59,8 +59,10 @@ function renderCooldown(nextAvailableAt) {
   const remainingMs = nextAvailableAt - Date.now();
   const isCoolingDown = remainingMs > 0;
 
-  elements.mainButton.disabled = isCoolingDown;
-  elements.mainButton.textContent = isCoolingDown ? "준비 중" : "열어보기";
+  elements.mainButton.disabled = isCoolingDown || isOpening;
+  elements.mainButton.textContent = isOpening
+    ? "여는 중"
+    : isCoolingDown ? "준비 중" : "열어보기";
   elements.cooldownText.textContent = isCoolingDown
     ? `다시 열기까지 ${formatDuration(remainingMs)}`
     : "지금 열 수 있어요";
@@ -134,6 +136,11 @@ async function refresh() {
 }
 
 async function handleMainButtonClick() {
+  if (isOpening) return;
+
+  isOpening = true;
+  elements.mainButton.disabled = true;
+  elements.mainButton.textContent = "여는 중";
   setStatus("여는 중...", "loading");
 
   try {
@@ -171,10 +178,12 @@ async function handleMainButtonClick() {
     await scheduleCooldownAlarm(nextAvailableAt);
 
     setStatus("도감에 새로 기록했어요.", "success");
-    await refresh();
   } catch (error) {
     console.error("main button failed", error);
     setStatus("열지 못했습니다. 다시 시도해 주세요.", "error");
+  } finally {
+    isOpening = false;
+    await refresh();
   }
 }
 
@@ -200,7 +209,6 @@ async function openCollection() {
 
 function init() {
   void initTheme();
-  void initContentPreference();
   document.title = APP_NAME;
   elements.appName.textContent = APP_NAME;
   elements.appDescription.textContent = APP_DESCRIPTION;

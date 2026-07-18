@@ -85,6 +85,31 @@ export function getEventContentItem(eventId, itemId) {
   return getEventContentItems(eventId).find((item) => item.id === itemId) || null;
 }
 
+export function getContentItemProbability(
+  eventId,
+  itemId,
+  parentProbability,
+  subItems = {},
+  noRepeatEnabled = true
+) {
+  const contentItems = getEventContentItems(eventId);
+  if (!contentItems.some((item) => item.id === itemId)) return 0;
+
+  if (!noRepeatEnabled) {
+    return parentProbability / contentItems.length;
+  }
+
+  const undiscoveredCount = contentItems.filter(
+    (item) => !subItems[item.id]?.discovered
+  ).length;
+  if (undiscoveredCount === 0) {
+    return parentProbability / contentItems.length;
+  }
+
+  if (subItems[itemId]?.discovered) return 0;
+  return parentProbability / undiscoveredCount;
+}
+
 export function selectEventContent(
   eventId,
   preferredItemId,

@@ -6,19 +6,24 @@ const storedValues = {
     sudden_cat: {
       remainingItemIds: ["dog"],
       lastItemId: "spinosaurus"
+    },
+    tab_exile: {
+      remainingItemIds: ["beach"],
+      lastItemId: "forest"
     }
   }
 };
-const changeHandlers = [];
 const dispatchedEvents = [];
+let documentChangeHandler = null;
 let storageChangeHandler = null;
 
-function createToggle() {
+function createToggle(eventId) {
   return {
     checked: false,
+    dataset: { eventId },
     attributes: {},
-    addEventListener(type, handler) {
-      if (type === "change") changeHandlers.push(handler);
+    closest(selector) {
+      return selector === "[data-content-no-repeat-toggle]" ? this : null;
     },
     setAttribute(name, value) {
       this.attributes[name] = value;
@@ -26,7 +31,7 @@ function createToggle() {
   };
 }
 
-const toggles = [createToggle(), createToggle()];
+const toggles = [createToggle("sudden_cat"), createToggle("tab_exile")];
 
 globalThis.CustomEvent = class {
   constructor(type, options) {
@@ -42,6 +47,9 @@ globalThis.window = {
 };
 
 globalThis.document = {
+  addEventListener(type, handler) {
+    if (type === "change") documentChangeHandler = handler;
+  },
   querySelectorAll(selector) {
     return selector === "[data-content-no-repeat-toggle]" ? toggles : [];
   }
@@ -70,23 +78,44 @@ globalThis.chrome = {
 const { initContentPreference } = await import("../src/content-preference.js");
 await initContentPreference();
 
+assert.deepEqual(storedValues.contentNoRepeat, {
+  sudden_cat: false,
+  tab_exile: false
+});
 toggles.forEach((toggle) => {
   assert.equal(toggle.checked, false);
-  assert.equal(toggle.attributes["aria-label"], "안 나온 것 먼저 켜기");
+  assert.equal(toggle.attributes["aria-label"], "안 나온 거 먼저 켜기");
 });
 
 toggles[0].checked = true;
-await changeHandlers[0]();
+await documentChangeHandler({ target: toggles[0] });
 
-assert.equal(storedValues.contentNoRepeat, true);
-assert.deepEqual(storedValues.contentDrawState, {});
-toggles.forEach((toggle) => {
-  assert.equal(toggle.checked, true);
-  assert.equal(toggle.attributes["aria-label"], "안 나온 것 먼저 끄기");
+assert.deepEqual(storedValues.contentNoRepeat, {
+  sudden_cat: true,
+  tab_exile: false
 });
+assert.deepEqual(storedValues.contentDrawState, {
+  tab_exile: {
+    remainingItemIds: ["beach"],
+    lastItemId: "forest"
+  }
+});
+assert.equal(toggles[0].checked, true);
+assert.equal(toggles[1].checked, false);
+assert.equal(toggles[0].attributes["aria-label"], "안 나온 거 먼저 끄기");
 
-storageChangeHandler({ contentNoRepeat: { newValue: false } }, "local");
-toggles.forEach((toggle) => assert.equal(toggle.checked, false));
-assert.equal(dispatchedEvents.at(-1).detail.enabled, false);
+storedValues.contentNoRepeat = {
+  sudden_cat: true,
+  tab_exile: true
+};
+await storageChangeHandler({
+  contentNoRepeat: { newValue: storedValues.contentNoRepeat }
+}, "local");
+
+toggles.forEach((toggle) => assert.equal(toggle.checked, true));
+assert.deepEqual(dispatchedEvents.at(-1).detail.preferences, {
+  sudden_cat: true,
+  tab_exile: true
+});
 
 console.log("content preference tests passed");

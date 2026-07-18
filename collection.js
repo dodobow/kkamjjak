@@ -5,7 +5,11 @@ import {
   EVENTS,
   formatProbabilityLabel
 } from "./src/constants.js";
-import { getEventContent, getEventContentItems } from "./src/content.js";
+import {
+  getContentItemProbability,
+  getEventContent,
+  getEventContentItems
+} from "./src/content.js";
 import {
   CONTENT_PREFERENCE_CHANGE_EVENT,
   initContentPreference
@@ -14,7 +18,7 @@ import { executeEventById } from "./src/effects.js";
 import { initTheme } from "./src/theme.js";
 import {
   clearCooldownForDebug,
-  getContentNoRepeatEnabled,
+  getContentNoRepeatPreferences,
   getCollectionData,
   getProgress,
   resetCollectionForDebug,
@@ -36,7 +40,7 @@ const elements = {
 };
 
 let collection = {};
-let contentNoRepeatEnabled = true;
+let contentNoRepeatPreferences = {};
 const pageParams = new URLSearchParams(location.search);
 let replayTargetTabId = Number(pageParams.get("targetTabId")) || null;
 
@@ -136,6 +140,7 @@ function createContentItemList(event, entry) {
   const content = getEventContent(event.id);
   if (!content?.items.length) return null;
 
+  const noRepeatEnabled = contentNoRepeatPreferences[event.id] !== false;
   const discoveredCount = content.items.filter(
     (item) => entry?.subItems?.[item.id]?.discovered
   ).length;
@@ -145,7 +150,29 @@ function createContentItemList(event, entry) {
 
   const heading = document.createElement("div");
   heading.className = "content-item-heading";
-  heading.innerHTML = `<strong>종류</strong><span>${discoveredCount} / ${content.items.length}</span>`;
+  const headingLabel = document.createElement("div");
+  headingLabel.className = "content-item-heading-label";
+  headingLabel.innerHTML = `<strong>종류</strong><span>${discoveredCount} / ${content.items.length}</span>`;
+
+  const preference = document.createElement("label");
+  preference.className = "theme-toggle content-item-preference";
+  const preferenceText = document.createElement("span");
+  preferenceText.textContent = "안 나온 거 먼저!";
+  const preferenceInput = document.createElement("input");
+  preferenceInput.type = "checkbox";
+  preferenceInput.setAttribute("role", "switch");
+  preferenceInput.dataset.contentNoRepeatToggle = "";
+  preferenceInput.dataset.eventId = event.id;
+  preferenceInput.checked = noRepeatEnabled;
+  preferenceInput.setAttribute(
+    "aria-label",
+    noRepeatEnabled ? "안 나온 거 먼저 끄기" : "안 나온 거 먼저 켜기"
+  );
+  const preferenceControl = document.createElement("span");
+  preferenceControl.className = "theme-toggle-control";
+  preferenceControl.setAttribute("aria-hidden", "true");
+  preference.append(preferenceText, preferenceInput, preferenceControl);
+  heading.append(headingLabel, preference);
   container.append(heading);
 
   content.items.forEach((item) => {
@@ -165,6 +192,7 @@ function createContentItemList(event, entry) {
       preview.append(image);
     } else {
       const placeholder = document.createElement("span");
+      placeholder.className = "content-item-placeholder";
       placeholder.textContent = "?";
       placeholder.setAttribute("aria-hidden", "true");
       preview.append(placeholder);
@@ -174,15 +202,17 @@ function createContentItemList(event, entry) {
     detail.className = "content-item-detail";
     const name = document.createElement("strong");
     const count = document.createElement("span");
-    const itemProbability = event.probability / content.items.length;
+    const itemProbability = getContentItemProbability(
+      event.id,
+      item.id,
+      event.probability,
+      entry?.subItems,
+      noRepeatEnabled
+    );
     name.textContent = isDiscovered ? item.name : "아직 미발견";
-    count.textContent = contentNoRepeatEnabled
-      ? isDiscovered
-        ? `${subItemEntry.count || 0}회 발견`
-        : "아직 미발견"
-      : isDiscovered
-        ? `${formatProbabilityLabel(itemProbability)} · ${subItemEntry.count || 0}회 발견`
-        : `${formatProbabilityLabel(itemProbability)} · 아직 미발견`;
+    count.textContent = isDiscovered
+      ? `${formatProbabilityLabel(itemProbability)} · ${subItemEntry.count || 0}회 발견`
+      : `${formatProbabilityLabel(itemProbability)} · 아직 미발견`;
     detail.append(name, count);
 
     const replayButton = document.createElement("button");
@@ -207,7 +237,7 @@ function createEventCard(event) {
   const card = document.createElement("article");
   card.className = `event-card${isDiscovered ? "" : " locked"}`;
 
-  const title = isDiscovered ? event.fullName : "???";
+  const title = isDiscovered ? event.fullName : "미발견";
   const name = isDiscovered ? event.name : "아직 나오지 않았습니다.";
   const description = isDiscovered
     ? event.description
@@ -303,24 +333,20 @@ async function replayEvent(eventId, contentItemId = null) {
     contentAssetId: subItemEntry?.lastAssetId || null
   });
   setStatus(
-    result.ok
-      ? event.target === "page"
-        ? "원래 탭에서 다시 실행했습니다."
-        : "새 탭에서 다시 열었습니다."
-      : result.userMessage,
+    result.ok ? "다시 실행했습니다." : result.userMessage,
     result.ok ? "success" : "error"
   );
 }
 
 async function refresh() {
   try {
-    const [progress, collectionData, noRepeatEnabled] = await Promise.all([
+    const [progress, collectionData, noRepeatPreferences] = await Promise.all([
       getProgress(),
       getCollectionData(),
-      getContentNoRepeatEnabled()
+      getContentNoRepeatPreferences()
     ]);
 
-    contentNoRepeatEnabled = noRepeatEnabled;
+    contentNoRepeatPreferences = noRepeatPreferences;
     collection = createDevUnlockedCollection(collectionData);
     const discoveredCount = EVENTS.filter((event) => collection[event.id]?.discovered).length;
     elements.totalProgress.textContent = `${discoveredCount} / ${progress.totalCount}`;
@@ -335,7 +361,7 @@ async function refresh() {
 
 function bindEvents() {
   window.addEventListener(CONTENT_PREFERENCE_CHANGE_EVENT, (event) => {
-    contentNoRepeatEnabled = event.detail.enabled;
+    contentNoRepeatPreferences = event.detail.preferences;
     if (Object.keys(collection).length) {
       renderEvents(getCategoryStats(collection));
     }
@@ -390,11 +416,7 @@ function init() {
 
   refresh();
 
-  if (replayTargetTabId) {
-    setStatus("다시 보기를 누르면 도감을 열었던 웹페이지에서 실행됩니다.");
-  } else {
-    setStatus("웹페이지에서 확장 아이콘으로 도감을 열면 다시 보기를 사용할 수 있습니다.");
-  }
+  setStatus("다시 보기를 누르면 백그라운드 탭에서 실행됩니다.");
 }
 
 init();

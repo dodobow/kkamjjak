@@ -6,7 +6,11 @@ import {
   RARITY_WEIGHTS,
   formatProbabilityLabel
 } from "../src/constants.js";
-import { getEventContentItems, selectEventContent } from "../src/content.js";
+import {
+  getContentItemProbability,
+  getEventContentItems,
+  selectEventContent
+} from "../src/content.js";
 import { pickWeightedEvent } from "../src/utils.js";
 
 function sequenceRandom(...values) {
@@ -67,7 +71,11 @@ assert.equal(discovery.isNewSubItemDiscovery, true);
 assert.equal(collection.sudden_cat.subItems.dog.count, 1);
 assert.equal(collection.sudden_cat.subItems.spinosaurus.discovered, false);
 
-assert.equal(await storage.getContentNoRepeatEnabled(), true);
+assert.deepEqual(await storage.getContentNoRepeatPreferences(), {
+  sudden_cat: true,
+  tab_exile: true
+});
+assert.equal(await storage.getContentNoRepeatEnabled("sudden_cat"), true);
 
 const unseenSelection = await storage.selectContentForDraw(
   "sudden_cat",
@@ -105,14 +113,28 @@ const cycleBoundarySelection = await storage.selectContentForDraw(
 );
 assert.equal(cycleBoundarySelection.itemId, "dog");
 
-await storage.setContentNoRepeatEnabled(false);
-assert.deepEqual(database.contentDrawState, {});
+database.contentDrawState.tab_exile = {
+  remainingItemIds: ["beach"],
+  lastItemId: "forest"
+};
+await storage.setContentNoRepeatEnabled("sudden_cat", false);
+assert.deepEqual(database.contentNoRepeat, {
+  sudden_cat: false,
+  tab_exile: true
+});
+assert.deepEqual(database.contentDrawState, {
+  tab_exile: {
+    remainingItemIds: ["beach"],
+    lastItemId: "forest"
+  }
+});
+assert.equal(await storage.getContentNoRepeatEnabled("tab_exile"), true);
 const unrestrictedSelection = await storage.selectContentForDraw(
   "sudden_cat",
   sequenceRandom(.99, 0)
 );
 assert.equal(unrestrictedSelection.itemId, "spinosaurus");
-await storage.setContentNoRepeatEnabled(true);
+await storage.setContentNoRepeatEnabled("sudden_cat", true);
 
 await storage.unlockAllEventsForDebug();
 assert.deepEqual(
@@ -195,6 +217,74 @@ assert.equal(spinosaurusSelection.itemId, "spinosaurus");
 assert.equal(beachSelection.itemId, "beach");
 assert.equal(formatProbabilityLabel(EVENTS.find((event) => event.id === "sudden_cat").probability / 2), "5.0%");
 assert.equal(formatProbabilityLabel(EVENTS.find((event) => event.id === "tab_exile").probability / 3), "1.67%");
+
+const suddenCatProbability = EVENTS.find((event) => event.id === "sudden_cat").probability;
+const tabExileProbability = EVENTS.find((event) => event.id === "tab_exile").probability;
+const partialDiscovery = {
+  dog: { discovered: true },
+  spinosaurus: { discovered: false }
+};
+const partialTravelDiscovery = {
+  forest: { discovered: true },
+  beach: { discovered: false },
+  waterfall: { discovered: false }
+};
+const completeTravelDiscovery = {
+  forest: { discovered: true },
+  beach: { discovered: true },
+  waterfall: { discovered: true }
+};
+
+assert.equal(
+  formatProbabilityLabel(getContentItemProbability(
+    "sudden_cat",
+    "dog",
+    suddenCatProbability,
+    partialDiscovery,
+    true
+  )),
+  "0%"
+);
+assert.equal(
+  formatProbabilityLabel(getContentItemProbability(
+    "sudden_cat",
+    "spinosaurus",
+    suddenCatProbability,
+    partialDiscovery,
+    true
+  )),
+  "10.0%"
+);
+assert.equal(
+  formatProbabilityLabel(getContentItemProbability(
+    "tab_exile",
+    "beach",
+    tabExileProbability,
+    partialTravelDiscovery,
+    true
+  )),
+  "2.5%"
+);
+assert.equal(
+  formatProbabilityLabel(getContentItemProbability(
+    "tab_exile",
+    "forest",
+    tabExileProbability,
+    partialTravelDiscovery,
+    false
+  )),
+  "1.67%"
+);
+assert.equal(
+  formatProbabilityLabel(getContentItemProbability(
+    "tab_exile",
+    "forest",
+    tabExileProbability,
+    completeTravelDiscovery,
+    true
+  )),
+  "1.67%"
+);
 
 for (const eventId of ["sudden_cat", "tab_exile"]) {
   for (const item of getEventContentItems(eventId)) {
