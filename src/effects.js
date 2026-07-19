@@ -75,6 +75,9 @@ export async function executeEvent(event, options = {}) {
 
   try {
     const contentSelection = createContentSelection(event.id, options);
+    const effectData = event.id === "button_judgement"
+      ? { comboImage: createContentSelection("sudden_cat") }
+      : contentSelection;
 
     if (event.target === "tab") {
       const eventUrl = new URL(getRuntimeUrl("event-page.html"));
@@ -105,7 +108,7 @@ export async function executeEvent(event, options = {}) {
       await focusTab(tab);
     }
 
-    await executeScriptInTab(tab.id, event.id, contentSelection);
+    await executeScriptInTab(tab.id, event.id, effectData);
     return { ok: true, contentSelection };
   } catch (error) {
     console.error("event execution failed", error);
@@ -202,6 +205,85 @@ function runInjectedEffect(eventId, effectData) {
     `);
     if (delay) cleanupLater(delay);
   };
+
+  const createStampMark = (container, options = {}) => {
+    const labels = options.labels || ["잘했음", "오늘 통과", "운 좋음", "인정"];
+    const maxSize = options.maxSize || 176;
+    const size = Math.max(
+      96,
+      Math.min(maxSize, window.innerWidth * .32, window.innerHeight * .32)
+    );
+    const padding = size / 2 + 20;
+    const safeCoordinate = (dimension) => dimension > padding * 2
+      ? padding + Math.random() * (dimension - padding * 2)
+      : dimension / 2;
+
+    const stamp = document.createElement("div");
+    stamp.className = "db-stamp-mark";
+    stamp.style.setProperty("--stamp-x", `${safeCoordinate(window.innerWidth)}px`);
+    stamp.style.setProperty("--stamp-y", `${safeCoordinate(window.innerHeight)}px`);
+    stamp.style.setProperty("--stamp-size", `${size}px`);
+    stamp.style.setProperty("--stamp-r", `${-18 + Math.random() * 36}deg`);
+    stamp.style.setProperty("--stamp-opacity", String(.9 + Math.random() * .06));
+
+    const label = document.createElement("strong");
+    label.textContent = randomFrom(labels);
+    stamp.append(label);
+
+    Array.from({ length: 9 }, () => {
+      const fleck = document.createElement("i");
+      fleck.className = "db-stamp-fleck";
+      fleck.style.setProperty("--fleck-x", `${-6 + Math.random() * 112}%`);
+      fleck.style.setProperty("--fleck-y", `${-6 + Math.random() * 112}%`);
+      fleck.style.setProperty("--fleck-size", `${2 + Math.random() * 3}px`);
+      fleck.style.setProperty("--fleck-delay", `${Math.random() * .12}s`);
+      stamp.append(fleck);
+      return fleck;
+    });
+
+    container.append(stamp);
+    return stamp;
+  };
+
+  const stampStyles = `
+    #${EFFECT_ROOT_ID} .db-stamp-mark {
+      position: absolute; left: var(--stamp-x); top: var(--stamp-y); display: grid;
+      width: var(--stamp-size); aspect-ratio: 1; place-items: center; border: 4px solid currentColor;
+      border-radius: 50%; color: #b74640; opacity: 0; font: 700 clamp(16px, 4vw, 24px)/1.15
+      "Noto Serif KR", "Nanum Myeongjo", Batang, serif; letter-spacing: 0; text-align: center;
+      transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(1.18);
+      animation: dbStampLand 4.6s cubic-bezier(.2,.78,.22,1) both;
+    }
+    #${EFFECT_ROOT_ID} .db-stamp-mark::before {
+      position: absolute; inset: 8px; border: 1.5px solid currentColor; border-radius: 50%;
+      content: ""; opacity: .72;
+    }
+    #${EFFECT_ROOT_ID} .db-stamp-mark strong {
+      position: relative; z-index: 1; max-width: 72%; padding: 3px 6px;
+      background: transparent; transform: rotate(-1deg);
+    }
+    #${EFFECT_ROOT_ID} .db-stamp-fleck {
+      position: absolute; left: var(--fleck-x); top: var(--fleck-y); width: var(--fleck-size);
+      aspect-ratio: 1; border-radius: 50%; background: currentColor; opacity: 0;
+      animation: dbStampFleck 4.6s ease var(--fleck-delay) both;
+    }
+    @keyframes dbStampLand {
+      0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(1.18); }
+      14% { opacity: var(--stamp-opacity); transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(.96); }
+      20%, 78% { opacity: var(--stamp-opacity); transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(.99); }
+    }
+    @keyframes dbStampFleck {
+      0%, 10% { opacity: 0; transform: scale(1.8); }
+      18%, 72% { opacity: .58; transform: scale(1); }
+      100% { opacity: 0; transform: scale(.8); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #${EFFECT_ROOT_ID} .db-stamp-mark { animation: dbStampReduced 4.6s linear both; }
+      #${EFFECT_ROOT_ID} .db-stamp-fleck { display: none; }
+      @keyframes dbStampReduced { 0%, 100% { opacity: 0; } 12%, 82% { opacity: var(--stamp-opacity); } }
+    }
+  `;
 
   removeExisting();
 
@@ -349,16 +431,15 @@ function runInjectedEffect(eventId, effectData) {
     }
 
     case "odd_stamp": {
-      const root = createRoot("db-stamp");
-      root.textContent = randomFrom(["확인", "통과", "보류", "다음에"]);
-      root.style.setProperty("--stamp-x", `${12 + Math.random() * 76}vw`);
-      root.style.setProperty("--stamp-y", `${14 + Math.random() * 72}vh`);
-      root.style.setProperty("--stamp-r", `${-32 + Math.random() * 64}deg`);
+      const root = createRoot("db-stamp-layer");
+      createStampMark(root);
       addStyle(`
-        #${EFFECT_ROOT_ID}.db-stamp { position: fixed; z-index: 2147483647; left: var(--stamp-x); top: var(--stamp-y); width: 180px; height: 180px; display: grid; place-items: center; border: 12px double #ff335f; border-radius: 50%; color: #ff335f; background: rgba(255,255,255,.04); font: 900 30px/1.1 system-ui, sans-serif; text-align: center; transform: translate(-50%, -50%) rotate(var(--stamp-r)); pointer-events: none; animation: dbStamp 4.8s ease both; text-shadow: 0 2px 0 rgba(0,0,0,.2); }
-        @keyframes dbStamp { 0% { opacity: 0; transform: translate(-50%, -50%) scale(2.4) rotate(var(--stamp-r)); } 18%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(var(--stamp-r)); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.8) rotate(var(--stamp-r)); } }
+        #${EFFECT_ROOT_ID}.db-stamp-layer {
+          position: fixed; inset: 0; z-index: 2147483647; overflow: hidden; pointer-events: none;
+        }
+        ${stampStyles}
       `);
-      cleanupLater(5000);
+      cleanupLater(4800);
       break;
     }
 
@@ -407,37 +488,231 @@ function runInjectedEffect(eventId, effectData) {
       schedule(() => console.info("깜짝!: Nothing 이벤트가 정상적으로 아무 일도 하지 않았습니다."), 250);
       break;
 
-    case "delayed_disaster":
-      overlayMessage("아직입니다...", 0);
-      schedule(() => {
-        const root = createRoot("db-catastrophe");
-        root.innerHTML = "<span>이제 나옵니다.</span>";
-        addStyle(`
-          html.db-disaster { filter: hue-rotate(150deg) saturate(2.1) contrast(1.38); }
-          html.db-disaster body { animation: dbCatastrophe .11s linear 30; transform-origin: center; will-change: transform; }
-          #${EFFECT_ROOT_ID}.db-catastrophe { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; overflow: hidden; color: white; background: repeating-linear-gradient(0deg, rgba(255,255,255,.13) 0 2px, transparent 2px 7px), rgba(255, 20, 80, .24); pointer-events: none; font: 900 min(7vw, 70px)/1.08 system-ui, sans-serif; text-align: center; text-shadow: 0 8px 28px rgba(0,0,0,.72); }
-          #${EFFECT_ROOT_ID}.db-catastrophe::before { content: "+  +  +  +  +  +"; position: absolute; inset: -20%; color: rgba(255,255,255,.28); font-size: min(18vw, 190px); letter-spacing: 20px; animation: dbWarningFall 1.1s linear infinite; }
-          #${EFFECT_ROOT_ID}.db-catastrophe span { position: relative; padding: 26px 32px; border: 2px solid rgba(255,255,255,.7); border-radius: 8px; background: rgba(12,12,18,.76); }
-          @keyframes dbCatastrophe { 0%,100% { transform: translate(0) scale(1); } 25% { transform: translate(9px,-5px) scale(1.12); } 50% { transform: translate(-8px,7px) scale(1.16); } 75% { transform: translate(4px,5px) scale(1.1); } }
-          @keyframes dbWarningFall { to { transform: translateY(18%); } }
-        `);
-        document.documentElement.classList.add("db-disaster");
-      }, 2400);
-      cleanupLater(7200);
-      break;
+    case "delayed_disaster": {
+      const root = createRoot("db-late-gift");
+      const shade = document.createElement("span");
+      const stage = document.createElement("div");
+      const parcel = document.createElement("div");
+      const giftBody = document.createElement("span");
+      const giftLid = document.createElement("span");
+      const giftNote = document.createElement("strong");
+      const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      const revealDelay = reducedMotion ? 1800 : 2600 + Math.random() * 1400;
 
-    case "button_judgement":
+      shade.className = "db-gift-shade";
+      stage.className = "db-gift-stage";
+      parcel.className = "db-gift-parcel";
+      giftBody.className = "db-gift-body";
+      giftLid.className = "db-gift-lid";
+      giftNote.className = "db-gift-note";
+      giftNote.textContent = "아, 맞다. 이거 두고 갈 뻔했다.";
+      parcel.append(giftBody, giftLid);
+
+      Array.from({ length: 14 }, (_, index) => {
+        const piece = document.createElement("i");
+        piece.className = "db-gift-piece";
+        piece.style.setProperty("--piece-x", `${-145 + Math.random() * 290}px`);
+        piece.style.setProperty("--piece-y", `${-90 - Math.random() * 150}px`);
+        piece.style.setProperty("--piece-r", `${-220 + Math.random() * 440}deg`);
+        piece.style.setProperty("--piece-delay", `${.28 + index * .025}s`);
+        piece.style.setProperty(
+          "--piece-color",
+          ["#b74640", "#d8a646", "#66856f", "#3f3b36"][index % 4]
+        );
+        stage.append(piece);
+        return piece;
+      });
+
+      stage.append(parcel, giftNote);
+      root.append(shade, stage);
       addStyle(`
-        html.db-judgement { filter: saturate(1.8) contrast(1.25); }
-        #${EFFECT_ROOT_ID}.db-judgement-root { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at center, rgba(255, 51, 95, .18), rgba(8, 8, 16, .78)); color: white; pointer-events: none; font: 900 min(9vw, 82px)/1.05 system-ui, sans-serif; text-align: center; }
-        #${EFFECT_ROOT_ID}.db-judgement-root::before { content: ""; position: absolute; inset: -55vmax; background: conic-gradient(from 0deg, transparent, rgba(255,255,255,.25), transparent, rgba(255,51,95,.45), transparent); animation: dbJudgementSpin 1.6s linear infinite; }
-        #${EFFECT_ROOT_ID}.db-judgement-root span { position: relative; max-width: 900px; padding: 24px; text-shadow: 0 8px 30px rgba(0,0,0,.6); }
-        @keyframes dbJudgementSpin { to { transform: rotate(1turn); } }
+        #${EFFECT_ROOT_ID}.db-late-gift {
+          position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center;
+          overflow: hidden; color: #302d29; font-family: system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif; pointer-events: none;
+        }
+        #${EFFECT_ROOT_ID} .db-gift-shade {
+          position: absolute; inset: 0; background: rgba(30, 27, 24, .28); opacity: 0;
+        }
+        #${EFFECT_ROOT_ID}.is-arrived .db-gift-shade { animation: dbGiftShade 4.2s ease both; }
+        #${EFFECT_ROOT_ID} .db-gift-stage {
+          position: relative; display: grid; width: min(22rem, calc(100vw - 32px)); min-height: 16rem;
+          place-items: center; align-content: center; gap: 18px; opacity: 0;
+        }
+        #${EFFECT_ROOT_ID}.is-arrived .db-gift-stage { animation: dbGiftStage 4.2s ease both; }
+        #${EFFECT_ROOT_ID} .db-gift-parcel {
+          position: relative; width: 160px; height: 124px; transform-origin: center bottom;
+        }
+        #${EFFECT_ROOT_ID}.is-arrived .db-gift-parcel { animation: dbGiftParcel 4.2s cubic-bezier(.2,.78,.22,1) both; }
+        #${EFFECT_ROOT_ID} .db-gift-body,
+        #${EFFECT_ROOT_ID} .db-gift-lid {
+          position: absolute; display: block; border: 1px solid #4a453f; border-radius: 5px;
+          background-color: #fff8ef;
+        }
+        #${EFFECT_ROOT_ID} .db-gift-body {
+          inset: 28px 8px 0;
+        }
+        #${EFFECT_ROOT_ID} .db-gift-body::before,
+        #${EFFECT_ROOT_ID} .db-gift-lid::before {
+          position: absolute; inset: 0 auto 0 44%; width: 12%; background: #b74640; content: "";
+        }
+        #${EFFECT_ROOT_ID} .db-gift-body::after {
+          position: absolute; inset: 42% 0 auto; height: 15px; background: #b74640; content: "";
+        }
+        #${EFFECT_ROOT_ID} .db-gift-lid {
+          top: 18px; left: 0; width: 100%; height: 30px; border-radius: 5px 5px 3px 3px;
+          transform-origin: 18% 100%;
+        }
+        #${EFFECT_ROOT_ID}.is-arrived .db-gift-lid { animation: dbGiftLid 4.2s ease both; }
+        #${EFFECT_ROOT_ID} .db-gift-note {
+          max-width: calc(100vw - 48px); padding: 8px 13px; border: 1px solid #4a453f;
+          border-radius: 4px; color: #302d29; background: #fffaf4; font-size: 15px;
+          font-weight: 700; line-height: 1.45; text-align: center; word-break: keep-all; opacity: 0;
+        }
+        #${EFFECT_ROOT_ID}.is-arrived .db-gift-note { animation: dbGiftNote 4.2s ease both; }
+        #${EFFECT_ROOT_ID} .db-gift-piece {
+          position: absolute; left: 50%; top: 48%; width: 8px; height: 13px; border-radius: 1px;
+          background: var(--piece-color); opacity: 0;
+        }
+        #${EFFECT_ROOT_ID}.is-arrived .db-gift-piece {
+          animation: dbGiftPiece 1.25s cubic-bezier(.12,.72,.2,1) var(--piece-delay) both;
+        }
+        @keyframes dbGiftShade { 0%, 100% { opacity: 0; } 12%, 82% { opacity: 1; } }
+        @keyframes dbGiftStage { 0%, 100% { opacity: 0; transform: translateY(12px); } 12%, 82% { opacity: 1; transform: translateY(0); } }
+        @keyframes dbGiftParcel { 0% { transform: translateY(-32px) scale(.9); } 18% { transform: translateY(4px) scale(1.02); } 25%, 82% { transform: translateY(0) scale(1); } 100% { transform: translateY(-4px) scale(.98); } }
+        @keyframes dbGiftLid { 0%, 23% { transform: translate(0) rotate(0); } 36%, 78% { transform: translate(-8px, -34px) rotate(-8deg); } 100% { transform: translate(-6px, -30px) rotate(-6deg); opacity: 0; } }
+        @keyframes dbGiftNote { 0%, 28% { opacity: 0; transform: translateY(8px); } 42%, 82% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; } }
+        @keyframes dbGiftPiece { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); } 18% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--piece-x)), calc(-50% + var(--piece-y))) rotate(var(--piece-r)); } }
+        @media (prefers-reduced-motion: reduce) {
+          #${EFFECT_ROOT_ID}.is-arrived .db-gift-shade { animation: dbGiftShade 4.2s linear both; }
+          #${EFFECT_ROOT_ID}.is-arrived .db-gift-stage { animation: dbGiftReduced 4.2s linear both; transform: none; }
+          #${EFFECT_ROOT_ID}.is-arrived .db-gift-parcel,
+          #${EFFECT_ROOT_ID}.is-arrived .db-gift-lid { animation: none; transform: none; }
+          #${EFFECT_ROOT_ID}.is-arrived .db-gift-note { animation: dbGiftReduced 4.2s linear both; transform: none; }
+          #${EFFECT_ROOT_ID} .db-gift-piece { display: none; }
+          @keyframes dbGiftReduced { 0%, 100% { opacity: 0; } 10%, 86% { opacity: 1; } }
+        }
       `);
-      document.documentElement.classList.add("db-judgement");
-      createRoot("db-judgement-root").innerHTML = "<span>한꺼번에</span>";
-      cleanupLater(6800);
+      schedule(() => root.classList.add("is-arrived"), revealDelay);
+      cleanupLater(revealDelay + 4400);
       break;
+    }
+
+    case "button_judgement": {
+      const root = createRoot("db-combo-layer");
+      const image = document.createElement("img");
+      const emoji = document.createElement("span");
+      const htmlClass = "db-combo-active";
+
+      image.className = "db-combo-image";
+      image.alt = "";
+      if (effectData?.comboImage?.assetUrl) {
+        image.src = effectData.comboImage.assetUrl;
+        image.addEventListener("error", () => image.remove(), { once: true });
+        root.append(image);
+      }
+
+      emoji.className = "db-combo-emoji";
+      emoji.textContent = randomFrom(["😵‍💫", "🫠", "🤯", "🥳"]);
+      root.append(emoji);
+
+      Array.from({ length: 42 }, () => {
+        const snow = document.createElement("span");
+        const duration = 3.6 + Math.random() * 2;
+        snow.className = "db-combo-snow";
+        snow.textContent = randomFrom(["❄", "✦", "·"]);
+        snow.style.left = `${Math.random() * 100}%`;
+        snow.style.setProperty("--particle-top", `${Math.random() * 100}%`);
+        snow.style.setProperty("--particle-delay", `${-Math.random() * duration}s`);
+        snow.style.setProperty("--particle-duration", `${duration}s`);
+        snow.style.setProperty("--particle-size", `${9 + Math.random() * 13}px`);
+        root.append(snow);
+        return snow;
+      });
+
+      Array.from({ length: 52 }, () => {
+        const rain = document.createElement("i");
+        const duration = .8 + Math.random() * .8;
+        rain.className = "db-combo-rain";
+        rain.style.left = `${Math.random() * 100}%`;
+        rain.style.setProperty("--particle-top", `${Math.random() * 100}%`);
+        rain.style.setProperty("--particle-delay", `${-Math.random() * duration}s`);
+        rain.style.setProperty("--particle-duration", `${duration}s`);
+        rain.style.setProperty("--particle-length", `${32 + Math.random() * 34}px`);
+        root.append(rain);
+        return rain;
+      });
+
+      document.documentElement.classList.add(htmlClass);
+      state.restorers.push(() => document.documentElement.classList.remove(htmlClass));
+      addStyle(`
+        #${EFFECT_ROOT_ID}.db-combo-layer {
+          position: fixed; inset: 0; z-index: 2147483647; overflow: hidden; pointer-events: none;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        html.db-combo-active body {
+          filter: blur(3px); transform-origin: center; will-change: transform;
+          animation: dbComboSpin 5.8s ease-in-out both;
+        }
+        #${EFFECT_ROOT_ID} .db-combo-image {
+          position: absolute; z-index: 1; left: 50%; top: 54%; width: min(52vw, 520px);
+          height: min(60vh, 560px); object-fit: contain; transform: translate(-50%, -50%);
+          filter: drop-shadow(0 10px 16px rgba(0, 0, 0, .22));
+          animation: dbComboImage 5.8s cubic-bezier(.2,.75,.2,1) both;
+        }
+        #${EFFECT_ROOT_ID} .db-combo-emoji {
+          position: absolute; z-index: 2; top: max(7vh, 36px); right: max(6vw, 24px);
+          font-size: min(20vw, 156px); line-height: 1;
+          filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .2));
+          animation: dbComboEmoji 5.8s ease both;
+        }
+        #${EFFECT_ROOT_ID} .db-combo-snow {
+          position: absolute; z-index: 3; top: -34px; color: #f4fbfd; font-size: var(--particle-size);
+          line-height: 1; text-shadow: 0 1px 1px rgba(0, 0, 0, .24);
+          animation: dbComboSnow var(--particle-duration) linear var(--particle-delay) 2 both;
+        }
+        #${EFFECT_ROOT_ID} .db-combo-rain {
+          position: absolute; z-index: 3; top: -72px; width: 2px; height: var(--particle-length);
+          border-radius: 2px; background: rgba(83, 151, 184, .82); transform: rotate(8deg);
+          animation: dbComboRain var(--particle-duration) linear var(--particle-delay) 5 both;
+        }
+        @keyframes dbComboSpin {
+          0% { transform: rotate(0) scale(1); }
+          45% { transform: rotate(1turn) scale(.96); }
+          100% { transform: rotate(0) scale(1); }
+        }
+        @keyframes dbComboImage {
+          0%, 100% { opacity: 0; transform: translate(-50%, -44%) scale(.72); }
+          12%, 84% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes dbComboEmoji {
+          0%, 100% { opacity: 0; transform: scale(.3) rotate(-16deg); }
+          10%, 86% { opacity: 1; transform: scale(1) rotate(8deg); }
+        }
+        @keyframes dbComboSnow { to { transform: translate3d(20px, calc(100vh + 78px), 0) rotate(1turn); } }
+        @keyframes dbComboRain { to { transform: translate3d(-22px, calc(100vh + 124px), 0) rotate(8deg); } }
+        @media (max-width: 540px) {
+          #${EFFECT_ROOT_ID} .db-combo-image {
+            top: 58%; width: min(78vw, 420px); height: min(54vh, 480px);
+          }
+          #${EFFECT_ROOT_ID} .db-combo-emoji {
+            top: 9vh; right: 6vw; font-size: min(28vw, 132px);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          html.db-combo-active body { animation: none; }
+          #${EFFECT_ROOT_ID} .db-combo-image,
+          #${EFFECT_ROOT_ID} .db-combo-emoji { animation: dbComboFadeReduced 5.8s linear both; }
+          #${EFFECT_ROOT_ID} .db-combo-snow,
+          #${EFFECT_ROOT_ID} .db-combo-rain {
+            top: var(--particle-top); animation: none; opacity: .72;
+          }
+          @keyframes dbComboFadeReduced { 0%, 100% { opacity: 0; } 10%, 88% { opacity: 1; } }
+        }
+      `);
+      cleanupLater(6200);
+      break;
+    }
 
     default:
       throw new Error(`Unknown injected eventId: ${eventId}`);
