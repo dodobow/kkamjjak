@@ -8,7 +8,7 @@ const EVENT_CONTENT = {
         assets: [
           {
             id: "dog-01",
-            path: "assets/images/discoveries/dog/dog-01.png",
+            path: "assets/images/discoveries/dog.png",
             alt: "강아지"
           }
         ]
@@ -19,7 +19,7 @@ const EVENT_CONTENT = {
         assets: [
           {
             id: "spinosaurus-01",
-            path: "assets/images/discoveries/spinosaurus/spinosaurus-01.png",
+            path: "assets/images/discoveries/spinosaurus.png",
             alt: "스피노사우루스"
           }
         ]

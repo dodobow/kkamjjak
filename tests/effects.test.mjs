@@ -44,7 +44,7 @@ try {
   assert.equal(injectedCall.args[1].comboImage.itemId, "dog");
   assert.equal(
     injectedCall.args[1].comboImage.assetUrl,
-    "chrome-extension://test/assets/images/discoveries/dog/dog-01.png"
+    "chrome-extension://test/assets/images/discoveries/dog.png"
   );
 } finally {
   Math.random = originalRandom;
