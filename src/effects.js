@@ -206,85 +206,6 @@ function runInjectedEffect(eventId, effectData) {
     if (delay) cleanupLater(delay);
   };
 
-  const createStampMark = (container, options = {}) => {
-    const labels = options.labels || ["잘했음", "오늘 통과", "운 좋음", "인정"];
-    const maxSize = options.maxSize || 176;
-    const size = Math.max(
-      96,
-      Math.min(maxSize, window.innerWidth * .32, window.innerHeight * .32)
-    );
-    const padding = size / 2 + 20;
-    const safeCoordinate = (dimension) => dimension > padding * 2
-      ? padding + Math.random() * (dimension - padding * 2)
-      : dimension / 2;
-
-    const stamp = document.createElement("div");
-    stamp.className = "db-stamp-mark";
-    stamp.style.setProperty("--stamp-x", `${safeCoordinate(window.innerWidth)}px`);
-    stamp.style.setProperty("--stamp-y", `${safeCoordinate(window.innerHeight)}px`);
-    stamp.style.setProperty("--stamp-size", `${size}px`);
-    stamp.style.setProperty("--stamp-r", `${-18 + Math.random() * 36}deg`);
-    stamp.style.setProperty("--stamp-opacity", String(.9 + Math.random() * .06));
-
-    const label = document.createElement("strong");
-    label.textContent = randomFrom(labels);
-    stamp.append(label);
-
-    Array.from({ length: 9 }, () => {
-      const fleck = document.createElement("i");
-      fleck.className = "db-stamp-fleck";
-      fleck.style.setProperty("--fleck-x", `${-6 + Math.random() * 112}%`);
-      fleck.style.setProperty("--fleck-y", `${-6 + Math.random() * 112}%`);
-      fleck.style.setProperty("--fleck-size", `${2 + Math.random() * 3}px`);
-      fleck.style.setProperty("--fleck-delay", `${Math.random() * .12}s`);
-      stamp.append(fleck);
-      return fleck;
-    });
-
-    container.append(stamp);
-    return stamp;
-  };
-
-  const stampStyles = `
-    #${EFFECT_ROOT_ID} .db-stamp-mark {
-      position: absolute; left: var(--stamp-x); top: var(--stamp-y); display: grid;
-      width: var(--stamp-size); aspect-ratio: 1; place-items: center; border: 4px solid currentColor;
-      border-radius: 50%; color: #b74640; opacity: 0; font: 700 clamp(16px, 4vw, 24px)/1.15
-      "Noto Serif KR", "Nanum Myeongjo", Batang, serif; letter-spacing: 0; text-align: center;
-      transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(1.18);
-      animation: dbStampLand 4.6s cubic-bezier(.2,.78,.22,1) both;
-    }
-    #${EFFECT_ROOT_ID} .db-stamp-mark::before {
-      position: absolute; inset: 8px; border: 1.5px solid currentColor; border-radius: 50%;
-      content: ""; opacity: .72;
-    }
-    #${EFFECT_ROOT_ID} .db-stamp-mark strong {
-      position: relative; z-index: 1; max-width: 72%; padding: 3px 6px;
-      background: transparent; transform: rotate(-1deg);
-    }
-    #${EFFECT_ROOT_ID} .db-stamp-fleck {
-      position: absolute; left: var(--fleck-x); top: var(--fleck-y); width: var(--fleck-size);
-      aspect-ratio: 1; border-radius: 50%; background: currentColor; opacity: 0;
-      animation: dbStampFleck 4.6s ease var(--fleck-delay) both;
-    }
-    @keyframes dbStampLand {
-      0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(1.18); }
-      14% { opacity: var(--stamp-opacity); transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(.96); }
-      20%, 78% { opacity: var(--stamp-opacity); transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(1); }
-      100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--stamp-r)) scale(.99); }
-    }
-    @keyframes dbStampFleck {
-      0%, 10% { opacity: 0; transform: scale(1.8); }
-      18%, 72% { opacity: .58; transform: scale(1); }
-      100% { opacity: 0; transform: scale(.8); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      #${EFFECT_ROOT_ID} .db-stamp-mark { animation: dbStampReduced 4.6s linear both; }
-      #${EFFECT_ROOT_ID} .db-stamp-fleck { display: none; }
-      @keyframes dbStampReduced { 0%, 100% { opacity: 0; } 12%, 82% { opacity: var(--stamp-opacity); } }
-    }
-  `;
-
   removeExisting();
 
   switch (eventId) {
@@ -427,52 +348,6 @@ function runInjectedEffect(eventId, effectData) {
         @keyframes dbEmoji { 0% { opacity: 0; transform: scale(.1) rotate(-20deg); } 30%, 75% { opacity: 1; transform: scale(1) rotate(8deg); } 100% { opacity: 0; transform: scale(.7) rotate(20deg); } }
       `);
       cleanupLater(4300);
-      break;
-    }
-
-    case "odd_stamp": {
-      const root = createRoot("db-stamp-layer");
-      createStampMark(root);
-      addStyle(`
-        #${EFFECT_ROOT_ID}.db-stamp-layer {
-          position: fixed; inset: 0; z-index: 2147483647; overflow: hidden; pointer-events: none;
-        }
-        ${stampStyles}
-      `);
-      cleanupLater(4800);
-      break;
-    }
-
-    case "tone_pollution": {
-      const candidates = Array.from(document.querySelectorAll("p, h1, h2, h3, h4, h5, h6, li, blockquote, figcaption, td, th"))
-        .filter((node) => {
-          const text = node.textContent.trim();
-          const rect = node.getBoundingClientRect();
-          const style = window.getComputedStyle(node);
-          return text.length > 8 && rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
-        })
-        .sort(() => Math.random() - .5)
-        .slice(0, 24);
-      const changedNodes = candidates.map((node, index) => {
-        const originalText = node.textContent;
-        node.dataset.dopamineOriginalText = originalText;
-        node.textContent = `${randomFrom(["아무튼", "근데 말인데", "일단", "그리고"])} ${originalText.trim().slice(0, 88)} ${[
-          "그렇다고 합니다.",
-          "아마도요.",
-          "정확하진 않습니다.",
-          "여기까지입니다."
-        ][index % 4]}`;
-        return [node, originalText];
-      });
-      state.restorers.push(() => {
-        changedNodes.forEach(([node, originalText]) => {
-          if (node.dataset.dopamineOriginalText === originalText) {
-            node.textContent = originalText;
-            delete node.dataset.dopamineOriginalText;
-          }
-        });
-      });
-      overlayMessage(`문장 ${changedNodes.length}개를 바꿨습니다. 새로고침하면 돌아옵니다.`, 5600);
       break;
     }
 

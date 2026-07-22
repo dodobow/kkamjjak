@@ -142,15 +142,6 @@ const EVENT_DEFINITIONS = [
     target: "page"
   },
   {
-    id: "odd_stamp",
-    category: "이미지",
-    name: "도장 쾅",
-    fullName: "이미지 - 도장 쾅",
-    description: "화면 아무 데나 도장이 하나 찍힙니다.",
-    rarity: "Epic",
-    target: "page"
-  },
-  {
     id: "tab_exile",
     category: "새 탭",
     name: "랜선 여행",
@@ -167,15 +158,6 @@ const EVENT_DEFINITIONS = [
     description: "재밌지만 유익하지는 않은 이야기들.",
     rarity: "Epic",
     target: "tab"
-  },
-  {
-    id: "tone_pollution",
-    category: "텍스트",
-    name: "누구세요?",
-    fullName: "텍스트 - 누구세요?",
-    description: "페이지 일부 문장이 바뀝니다. 새로고침하면 돌아옵니다.",
-    rarity: "Epic",
-    target: "page"
   },
   {
     id: "button_mockery",

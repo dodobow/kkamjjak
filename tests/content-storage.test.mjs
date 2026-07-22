@@ -214,13 +214,13 @@ for (const eventId of ["sudden_cat", "tab_exile"]) {
 const expectedRarityCounts = {
   Common: 5,
   Rare: 7,
-  Epic: 3,
+  Epic: 1,
   Legendary: 2,
   Mythic: 1
 };
 
 assert.ok(Math.abs(EVENTS.reduce((sum, event) => sum + event.weight, 0) - 100) < 1e-10);
-assert.equal(EVENTS.length, 18);
+assert.equal(EVENTS.length, 16);
 assert.equal(EVENTS.some((event) => event.category === "사운드"), false);
 RARITY_ORDER.forEach((rarity) => {
   const rarityEvents = EVENTS.filter((event) => event.rarity === rarity);
