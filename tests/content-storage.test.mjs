@@ -253,9 +253,14 @@ const sortableCollection = {
 };
 
 assert.deepEqual(
-  sortEventsForCollection(sortableEvents, sortableCollection, "rarity")
+  sortEventsForCollection(sortableEvents, sortableCollection, "rarity-desc")
     .map((event) => event.id),
   ["nothing_happened", "snow_browser", "color_doom", "spin_world"]
+);
+assert.deepEqual(
+  sortEventsForCollection(sortableEvents, sortableCollection, "rarity-asc")
+    .map((event) => event.id),
+  ["spin_world", "color_doom", "snow_browser", "nothing_happened"]
 );
 assert.deepEqual(
   sortEventsForCollection(sortableEvents, sortableCollection, "discovered")

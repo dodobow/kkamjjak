@@ -35,7 +35,7 @@ import {
 const elements = {
   title: document.querySelector("#collectionTitle"),
   totalProgress: document.querySelector("#totalProgress"),
-  collectionSort: document.querySelector("#collectionSort"),
+  collectionSortOptions: document.querySelector("#collectionSortOptions"),
   categoryStats: document.querySelector("#categoryStats"),
   eventSections: document.querySelector("#eventSections"),
   statusText: document.querySelector("#statusText")
@@ -43,7 +43,7 @@ const elements = {
 
 let collection = {};
 let contentNoRepeatPreferences = {};
-let collectionSortMode = "rarity";
+let collectionSortMode = "rarity-desc";
 const expandedContentEvents = new Set();
 const pageParams = new URLSearchParams(location.search);
 let replayTargetTabId = Number(pageParams.get("targetTabId")) || null;
@@ -403,8 +403,10 @@ async function refresh() {
 }
 
 function bindEvents() {
-  elements.collectionSort.addEventListener("change", () => {
-    collectionSortMode = elements.collectionSort.value;
+  elements.collectionSortOptions.addEventListener("change", (event) => {
+    if (!event.target.matches('input[name="collectionSort"]')) return;
+
+    collectionSortMode = event.target.value;
     if (Object.keys(collection).length) {
       renderEvents(getCategoryStats(collection));
     }

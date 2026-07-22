@@ -40,12 +40,27 @@
 
       <div class="collection-content">
         <div class="collection-toolbar">
-          <label for="collectionSort">정렬</label>
-          <select id="collectionSort" name="collectionSort">
-            <option value="rarity">레어도순</option>
-            <option value="discovered">발견한 것 먼저</option>
-            <option value="undiscovered">미발견한 것 먼저</option>
-          </select>
+          <div class="sort-control" role="radiogroup" aria-labelledby="collectionSortLabel">
+            <span id="collectionSortLabel" class="sort-label">정렬</span>
+            <div id="collectionSortOptions" class="sort-options">
+              <label class="sort-option">
+                <input type="radio" name="collectionSort" value="rarity-desc" checked>
+                <span>높은 레어도</span>
+              </label>
+              <label class="sort-option">
+                <input type="radio" name="collectionSort" value="rarity-asc">
+                <span>낮은 레어도</span>
+              </label>
+              <label class="sort-option">
+                <input type="radio" name="collectionSort" value="discovered">
+                <span>발견 먼저</span>
+              </label>
+              <label class="sort-option">
+                <input type="radio" name="collectionSort" value="undiscovered">
+                <span>미발견 먼저</span>
+              </label>
+            </div>
+          </div>
         </div>
         <section id="eventSections" class="event-sections" aria-label="깜짝! 도감"></section>
       </div>

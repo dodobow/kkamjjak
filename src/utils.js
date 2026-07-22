@@ -74,7 +74,7 @@ export function getCategoryStats(collectionData) {
 export function sortEventsForCollection(
   events,
   collectionData,
-  mode = "rarity"
+  mode = "rarity-desc"
 ) {
   const rarityRank = (event) => RARITY_ORDER.indexOf(event.rarity);
   const discoveryRank = (event) => Number(Boolean(collectionData[event.id]?.discovered));
@@ -90,7 +90,9 @@ export function sortEventsForCollection(
         if (discoveryDifference !== 0) return discoveryDifference;
       }
 
-      const rarityDifference = rarityRank(right.event) - rarityRank(left.event);
+      const rarityDifference = mode === "rarity-asc"
+        ? rarityRank(left.event) - rarityRank(right.event)
+        : rarityRank(right.event) - rarityRank(left.event);
       return rarityDifference || left.index - right.index;
     })
     .map(({ event }) => event);

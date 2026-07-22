@@ -103,39 +103,82 @@ h1 {
 
 .collection-toolbar {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: var(--space-3);
   margin-bottom: var(--space-6);
 }
 
-.collection-toolbar label {
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sort-label {
   color: var(--color-muted);
+  font-family: var(--font-sans);
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
-.collection-toolbar select {
-  min-width: 10rem;
-  min-height: 2.75rem;
-  padding: 0 2.25rem 0 var(--space-3);
-  border: 1px solid var(--color-border-strong);
+.sort-options {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: 0.1875rem;
+  padding: 0.1875rem;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  font: inherit;
-  font-size: 0.8125rem;
+  background: var(--color-surface-subtle);
+}
+
+.sort-option {
+  position: relative;
+}
+
+.sort-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.sort-option span {
+  display: grid;
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  place-items: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  transition: color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
-.collection-toolbar select:hover {
-  border-color: var(--color-accent);
+.sort-option:hover span {
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 
-.collection-toolbar select:focus-visible {
+.sort-option input:checked + span {
+  color: var(--color-accent);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.sort-option input:focus-visible + span {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+.sort-option:active span {
+  transform: translateY(1px);
 }
 
 .stats-panel h2 {
@@ -600,7 +643,17 @@ h1 {
   }
 
   .collection-toolbar {
-    justify-content: space-between;
+    justify-content: stretch;
+  }
+
+  .sort-control {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .sort-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
