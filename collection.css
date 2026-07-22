@@ -97,6 +97,47 @@ h1 {
   align-self: start;
 }
 
+.collection-content {
+  min-width: 0;
+}
+
+.collection-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.collection-toolbar label {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.collection-toolbar select {
+  min-width: 10rem;
+  min-height: 2.75rem;
+  padding: 0 2.25rem 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.collection-toolbar select:hover {
+  border-color: var(--color-accent);
+}
+
+.collection-toolbar select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .stats-panel h2 {
   margin: 0 0 var(--space-4);
   font-size: 1.125rem;
@@ -556,6 +597,10 @@ h1 {
 
   .event-grid {
     grid-template-columns: 1fr;
+  }
+
+  .collection-toolbar {
+    justify-content: space-between;
   }
 }
 

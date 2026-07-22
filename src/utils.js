@@ -71,6 +71,31 @@ export function getCategoryStats(collectionData) {
   });
 }
 
+export function sortEventsForCollection(
+  events,
+  collectionData,
+  mode = "rarity"
+) {
+  const rarityRank = (event) => RARITY_ORDER.indexOf(event.rarity);
+  const discoveryRank = (event) => Number(Boolean(collectionData[event.id]?.discovered));
+
+  return events
+    .map((event, index) => ({ event, index }))
+    .sort((left, right) => {
+      if (mode === "discovered" || mode === "undiscovered") {
+        const direction = mode === "discovered" ? -1 : 1;
+        const discoveryDifference = (
+          discoveryRank(left.event) - discoveryRank(right.event)
+        ) * direction;
+        if (discoveryDifference !== 0) return discoveryDifference;
+      }
+
+      const rarityDifference = rarityRank(right.event) - rarityRank(left.event);
+      return rarityDifference || left.index - right.index;
+    })
+    .map(({ event }) => event);
+}
+
 export function isScriptableUrl(url = "") {
   return /^(https?:|file:)/.test(url);
 }

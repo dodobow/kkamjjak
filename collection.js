@@ -28,12 +28,14 @@ import {
   formatTimestamp,
   getCategoryStats,
   getEventById,
-  isScriptableUrl
+  isScriptableUrl,
+  sortEventsForCollection
 } from "./src/utils.js";
 
 const elements = {
   title: document.querySelector("#collectionTitle"),
   totalProgress: document.querySelector("#totalProgress"),
+  collectionSort: document.querySelector("#collectionSort"),
   categoryStats: document.querySelector("#categoryStats"),
   eventSections: document.querySelector("#eventSections"),
   statusText: document.querySelector("#statusText")
@@ -41,6 +43,7 @@ const elements = {
 
 let collection = {};
 let contentNoRepeatPreferences = {};
+let collectionSortMode = "rarity";
 const expandedContentEvents = new Set();
 const pageParams = new URLSearchParams(location.search);
 let replayTargetTabId = Number(pageParams.get("targetTabId")) || null;
@@ -327,7 +330,12 @@ function renderEvents(stats) {
 
     const grid = document.createElement("div");
     grid.className = "event-grid";
-    stat.events.forEach((event) => grid.append(createEventCard(event)));
+    const sortedEvents = sortEventsForCollection(
+      stat.events,
+      collection,
+      collectionSortMode
+    );
+    sortedEvents.forEach((event) => grid.append(createEventCard(event)));
     section.append(grid);
     elements.eventSections.append(section);
   });
@@ -395,6 +403,13 @@ async function refresh() {
 }
 
 function bindEvents() {
+  elements.collectionSort.addEventListener("change", () => {
+    collectionSortMode = elements.collectionSort.value;
+    if (Object.keys(collection).length) {
+      renderEvents(getCategoryStats(collection));
+    }
+  });
+
   window.addEventListener(CONTENT_PREFERENCE_CHANGE_EVENT, (event) => {
     contentNoRepeatPreferences = event.detail.preferences;
     if (Object.keys(collection).length) {

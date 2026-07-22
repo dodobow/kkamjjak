@@ -11,7 +11,10 @@ import {
   getEventContentItems,
   selectEventContent
 } from "../src/content.js";
-import { pickWeightedEvent } from "../src/utils.js";
+import {
+  pickWeightedEvent,
+  sortEventsForCollection
+} from "../src/utils.js";
 
 function sequenceRandom(...values) {
   let index = 0;
@@ -237,6 +240,33 @@ assert.equal(pickWeightedEvent(EVENTS, sequenceRandom(.5, 0)).rarity, "Rare");
 assert.equal(pickWeightedEvent(EVENTS, sequenceRandom(.85, 0)).rarity, "Epic");
 assert.equal(pickWeightedEvent(EVENTS, sequenceRandom(.95, 0)).rarity, "Legendary");
 assert.equal(pickWeightedEvent(EVENTS, sequenceRandom(.99, 0)).rarity, "Mythic");
+
+const sortableEvents = [
+  EVENTS.find((event) => event.id === "spin_world"),
+  EVENTS.find((event) => event.id === "color_doom"),
+  EVENTS.find((event) => event.id === "snow_browser"),
+  EVENTS.find((event) => event.id === "nothing_happened")
+];
+const sortableCollection = {
+  spin_world: { discovered: true },
+  snow_browser: { discovered: true }
+};
+
+assert.deepEqual(
+  sortEventsForCollection(sortableEvents, sortableCollection, "rarity")
+    .map((event) => event.id),
+  ["nothing_happened", "snow_browser", "color_doom", "spin_world"]
+);
+assert.deepEqual(
+  sortEventsForCollection(sortableEvents, sortableCollection, "discovered")
+    .map((event) => event.id),
+  ["snow_browser", "spin_world", "nothing_happened", "color_doom"]
+);
+assert.deepEqual(
+  sortEventsForCollection(sortableEvents, sortableCollection, "undiscovered")
+    .map((event) => event.id),
+  ["nothing_happened", "color_doom", "snow_browser", "spin_world"]
+);
 
 const spinosaurusSelection = selectEventContent(
   "sudden_cat",
