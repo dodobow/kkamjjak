@@ -213,8 +213,8 @@ for (const eventId of ["sudden_cat", "tab_exile"]) {
 
 const expectedRarityCounts = {
   Common: 5,
-  Rare: 7,
-  Epic: 1,
+  Rare: 6,
+  Epic: 2,
   Legendary: 2,
   Mythic: 1
 };

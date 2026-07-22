@@ -111,7 +111,7 @@ const EVENT_DEFINITIONS = [
     name: "눈 오는 브라우저",
     fullName: "웹페이지 변화 - 눈 오는 브라우저",
     description: "눈이 펑펑 오네요.",
-    rarity: "Rare",
+    rarity: "Epic",
     target: "page"
   },
   {
@@ -147,7 +147,7 @@ const EVENT_DEFINITIONS = [
     name: "랜선 여행",
     fullName: "새 탭 - 랜선 여행",
     description: "자연 속으로 힐링 여행을 떠나봅시다.",
-    rarity: "Rare",
+    rarity: "Epic",
     target: "tab"
   },
   {
@@ -156,7 +156,7 @@ const EVENT_DEFINITIONS = [
     name: "오늘의 TMI",
     fullName: "새 탭 - 오늘의 TMI",
     description: "재밌지만 유익하지는 않은 이야기들.",
-    rarity: "Epic",
+    rarity: "Rare",
     target: "tab"
   },
   {
