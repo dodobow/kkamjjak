@@ -478,9 +478,16 @@ function runInjectedEffect(eventId, effectData) {
 
     case "button_mockery":
       overlayMessage(randomFrom([
-        "여기까지 눌렀으면 됐습니다.",
-        "정답은 없고 결과만 있습니다.",
-        "한 시간 뒤에 또 봅시다."
+        "최고의 운세! 무엇을 하든 성공할 하루입니다.",
+        "무난한 하루가 될 것 같아요. 오늘 하루도 화이팅!",
+        "주위를 조심하세요. 누군가가 당신의 뒤를 노리고 있을 수도...",
+        "오늘은 작은 선택 하나가 큰 행운으로 이어질지도 몰라요.",
+        "평범해 보이는 하루지만, 예상치 못한 좋은 소식이 찾아올 수 있어요.",
+        "망설이던 일이 있다면 오늘이 시작하기 좋은 날이에요.",
+        "운은 준비된 사람의 편! 오늘은 용기 내서 한 걸음 나아가 보세요.",
+        "잠시 쉬어가는 것도 중요한 하루예요. 너무 서두르지 마세요.",
+        "뜻밖의 만남이나 연락이 당신의 하루를 바꿀지도 몰라요.",
+        "오늘의 운세는... 비밀~"
       ]), 4600, true);
       break;
 
@@ -505,7 +512,7 @@ function runInjectedEffect(eventId, effectData) {
       giftBody.className = "db-gift-body";
       giftLid.className = "db-gift-lid";
       giftNote.className = "db-gift-note";
-      giftNote.textContent = "아, 맞다. 이거 두고 갈 뻔했다.";
+      giftNote.textContent = "짜잔! 아무것도 없는 줄 알았죠?";
       parcel.append(giftBody, giftLid);
 
       Array.from({ length: 14 }, (_, index) => {

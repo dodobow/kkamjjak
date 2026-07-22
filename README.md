@@ -135,7 +135,7 @@ export const DEV_SHOW_DEBUG_TOOLS = true;
 | 이미지 | 빅 이모지 | Rare | 5.0% |
 | 이미지 | 도장 쾅 | Epic | 3.33% |
 | 새 탭 | 랜선 여행 | Rare | 5.0% |
-| 새 탭 | 오늘의 한마디 | Epic | 3.33% |
+| 새 탭 | 오늘의 TMI | Epic | 3.33% |
 | 텍스트 | 누구세요? | Epic | 3.33% |
 | 텍스트 | 포춘 쿠키 | Rare | 5.0% |
 | 기타 | Nothing | Legendary | 2.0% |

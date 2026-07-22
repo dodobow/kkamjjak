@@ -56,7 +56,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "빙글빙글",
     fullName: "웹페이지 변화 - 빙글빙글",
-    description: "페이지가 한 바퀴 돌았다가 돌아옵니다.",
+    description: "어지러워요...",
     rarity: "Common",
     target: "page"
   },
@@ -65,7 +65,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "브라우저 지진",
     fullName: "웹페이지 변화 - 브라우저 지진",
-    description: "페이지가 잠깐 흔들립니다.",
+    description: "으악! 지진이야!",
     rarity: "Common",
     target: "page"
   },
@@ -74,7 +74,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "색감 뒤집기",
     fullName: "웹페이지 변화 - 색감 뒤집기",
-    description: "페이지 색상이 잠깐 반전됩니다.",
+    description: "이건 또 새로운 느낌이네요.",
     rarity: "Rare",
     target: "page"
   },
@@ -83,7 +83,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "흑백 세상",
     fullName: "웹페이지 변화 - 흑백 세상",
-    description: "페이지가 잠깐 흑백으로 변합니다.",
+    description: "옛날 사진 느낌이 이런 걸까?",
     rarity: "Common",
     target: "page"
   },
@@ -92,7 +92,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "액정에 습기가..",
     fullName: "웹페이지 변화 - 액정에 습기가..",
-    description: "모든 것이 살짝 흐려집니다.",
+    description: "어라? 왜 내 안구에 습기가...?",
     rarity: "Common",
     target: "page"
   },
@@ -101,7 +101,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "확대 착시",
     fullName: "웹페이지 변화 - 확대 착시",
-    description: "페이지가 가까워졌다가 원래 자리로 돌아옵니다.",
+    description: "안아줘요!",
     rarity: "Rare",
     target: "page"
   },
@@ -110,7 +110,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "눈 오는 브라우저",
     fullName: "웹페이지 변화 - 눈 오는 브라우저",
-    description: "화면 위로 눈송이가 내려옵니다.",
+    description: "눈이 펑펑 오네요.",
     rarity: "Rare",
     target: "page"
   },
@@ -119,7 +119,7 @@ const EVENT_DEFINITIONS = [
     category: "웹페이지 변화",
     name: "비 오는 브라우저",
     fullName: "웹페이지 변화 - 비 오는 브라우저",
-    description: "화면 위로 빗방울이 내려옵니다.",
+    description: "비가 오는 날입니다.",
     rarity: "Rare",
     target: "page"
   },
@@ -137,7 +137,7 @@ const EVENT_DEFINITIONS = [
     category: "이미지",
     name: "빅 이모지",
     fullName: "이미지 - 빅 이모지",
-    description: "큰 이모지가 화면 중앙을 장악합니다.",
+    description: "이렇게 크게 이모지를 볼 일이 있을까요?",
     rarity: "Rare",
     target: "page"
   },
@@ -155,16 +155,16 @@ const EVENT_DEFINITIONS = [
     category: "새 탭",
     name: "랜선 여행",
     fullName: "새 탭 - 랜선 여행",
-    description: "숲, 바다, 폭포 중 한 곳이 새 탭에서 열립니다.",
+    description: "자연 속으로 힐링 여행을 떠나봅시다.",
     rarity: "Rare",
     target: "tab"
   },
   {
     id: "meaningless_oracle",
     category: "새 탭",
-    name: "오늘의 한마디",
-    fullName: "새 탭 - 오늘의 한마디",
-    description: "새 탭에 문장 하나가 표시됩니다.",
+    name: "오늘의 TMI",
+    fullName: "새 탭 - 오늘의 TMI",
+    description: "재밌지만 유익하지는 않은 이야기들.",
     rarity: "Epic",
     target: "tab"
   },
@@ -182,7 +182,7 @@ const EVENT_DEFINITIONS = [
     category: "텍스트",
     name: "포춘 쿠키",
     fullName: "텍스트 - 포춘 쿠키",
-    description: "화면 중앙에 문장 하나가 나타납니다.",
+    description: "두근두근 오늘의 운세.",
     rarity: "Rare",
     target: "page"
   },
@@ -200,7 +200,7 @@ const EVENT_DEFINITIONS = [
     category: "기타",
     name: "늦게 온 선물",
     fullName: "기타 - 늦게 온 선물",
-    description: "몇 초 뒤에 효과가 시작됩니다.",
+    description: "아무 일도... 없지 않았다.",
     rarity: "Legendary",
     target: "page"
   },
@@ -209,7 +209,7 @@ const EVENT_DEFINITIONS = [
     category: "특수 효과",
     name: "한꺼번에",
     fullName: "특수 효과 - 한꺼번에",
-    description: "여러 효과가 한 번에 실행됩니다.",
+    description: "종합 선물 세트!",
     rarity: "Mythic",
     target: "page"
   }

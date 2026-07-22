@@ -17,21 +17,23 @@ function getRuntimeUrl(path) {
 }
 
 const oracleLines = [
-  "미루는 데도 체력이 듭니다.",
-  "냉장고를 다시 열어도 없던 음식은 생기지 않습니다.",
-  "할 일은 줄지 않았지만 일단 물은 마셨습니다.",
-  "오늘의 선택이 꼭 중요한 선택일 필요는 없습니다.",
-  "이 문장에는 별다른 뜻이 없습니다."
+  "개발자의 MBTI는 ENTP입니다.",
+  "시바견은 이름과 달리 욕설을 하지 않습니다.",
+  "레몬 하나에는 레몬 1개 분량의 비타민 C가 들어 있습니다.",
+  "금성에서는 하루가 1년보다 깁니다.",
+  "문어는 심장이 세 개입니다.",
+  "웜뱃은 네모난 똥을 쌉니다.",
+  "에펠탑의 높이는 기온에 따라 달라집니다.",
+  "가면올빼미는 완전한 어둠 속에서도 소리만으로 먹이의 위치를 찾아낼 수 있습니다.",
+  "카피바라는 현존하는 설치류 중 가장 큽니다.",
+  "크레스티드 게코는 눈꺼풀이 없어 혀로 눈을 닦습니다.",
+  "개의 코무늬는 사람의 지문처럼 개체마다 다릅니다.",
+  "황제펭귄 수컷은 알을 발등 위에 올린 채 약 두 달 동안 품습니다.",
+  "사막여우는 개과 동물 중 몸집에 비해 가장 큰 귀를 가지고 있습니다.",
+  "푸른바다거북이라는 이름은 등딱지가 아니라 체지방이 녹색인 데서 유래했습니다.",
+  "레서판다는 대나무를 잡기 위한 가짜 엄지를 가지고 있습니다.",
+  "스피노사우루스는 현재까지 알려진 육식공룡 중 몸길이가 가장 길었습니다."
 ];
-
-function setMessageLines(message, lines) {
-  message.textContent = "";
-  lines.forEach((line) => {
-    const lineElement = document.createElement("span");
-    lineElement.textContent = line;
-    message.append(lineElement);
-  });
-}
 
 function createRipple(container, x, y) {
   const ripple = document.createElement("span");
@@ -173,7 +175,7 @@ function render() {
   }
 
   if (event.id === "meaningless_oracle") {
-    setMessageLines(message, ["오늘의 한마디"]);
+    message.hidden = true;
     oracleBox.textContent = oracleLines[Math.floor(Math.random() * oracleLines.length)];
     return;
   }
