@@ -58,6 +58,38 @@ function createLeaves(container, x, y) {
   });
 }
 
+function createPetals(container, x, y) {
+  Array.from({ length: 8 }, (_, index) => {
+    const petal = document.createElement("span");
+    petal.className = "scene-petal";
+    petal.style.left = `${x + (Math.random() - .5) * 70}px`;
+    petal.style.top = `${y + (Math.random() - .5) * 30}px`;
+    petal.style.setProperty("--petal-x", `${(Math.random() - .5) * 160}px`);
+    petal.style.setProperty("--petal-y", `${70 + Math.random() * 110}px`);
+    petal.style.setProperty("--petal-r", `${180 + Math.random() * 300}deg`);
+    petal.style.animationDelay = `${index * 30}ms`;
+    container.append(petal);
+    petal.addEventListener("animationend", () => petal.remove(), { once: true });
+    return petal;
+  });
+}
+
+function createDust(container, x, y) {
+  Array.from({ length: 9 }, (_, index) => {
+    const dust = document.createElement("span");
+    dust.className = "scene-dust";
+    dust.style.left = `${x + (Math.random() - .5) * 90}px`;
+    dust.style.top = `${y + (Math.random() - .5) * 34}px`;
+    dust.style.setProperty("--dust-size", `${8 + Math.random() * 16}px`);
+    dust.style.setProperty("--dust-x", `${(Math.random() - .5) * 150}px`);
+    dust.style.setProperty("--dust-y", `${-35 - Math.random() * 75}px`);
+    dust.style.animationDelay = `${index * 24}ms`;
+    container.append(dust);
+    dust.addEventListener("animationend", () => dust.remove(), { once: true });
+    return dust;
+  });
+}
+
 function bindSceneInteraction(selection) {
   const backdrop = document.querySelector("#sceneBackdrop");
   const effects = document.querySelector("#sceneEffects");
@@ -75,12 +107,22 @@ function bindSceneInteraction(selection) {
   window.addEventListener("pointerup", (pointerEvent) => {
     if (pointerEvent.target.closest("button")) return;
 
-    if (selection.interaction === "leaves") {
-      createLeaves(effects, pointerEvent.clientX, pointerEvent.clientY);
-      return;
+    switch (selection.interaction) {
+      case "leaves":
+        createLeaves(effects, pointerEvent.clientX, pointerEvent.clientY);
+        break;
+      case "petals":
+        createPetals(effects, pointerEvent.clientX, pointerEvent.clientY);
+        break;
+      case "dust":
+        createDust(effects, pointerEvent.clientX, pointerEvent.clientY);
+        break;
+      case "ripples":
+        createRipple(effects, pointerEvent.clientX, pointerEvent.clientY);
+        break;
+      default:
+        break;
     }
-
-    createRipple(effects, pointerEvent.clientX, pointerEvent.clientY);
   });
 }
 

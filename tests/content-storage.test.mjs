@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access } from "node:fs/promises";
+import { access, readdir } from "node:fs/promises";
 import {
   EVENTS,
   RARITY_ORDER,
@@ -16,6 +16,16 @@ import { pickWeightedEvent } from "../src/utils.js";
 function sequenceRandom(...values) {
   let index = 0;
   return () => values[index++] ?? 0;
+}
+
+function createSubItemState(eventId, discoveredItemIds = []) {
+  const discoveredItems = new Set(discoveredItemIds);
+  return Object.fromEntries(
+    getEventContentItems(eventId).map((item) => [
+      item.id,
+      { discovered: discoveredItems.has(item.id) }
+    ])
+  );
 }
 
 const database = {
@@ -58,10 +68,23 @@ globalThis.chrome = {
 
 const storage = await import("../src/storage.js");
 let collection = await storage.getCollectionData();
+const discoveryItems = getEventContentItems("sudden_cat");
+const travelItems = getEventContentItems("tab_exile");
 
 assert.equal(collection.spin_world.count, 3);
-assert.equal(Object.keys(collection.sudden_cat.subItems).length, 2);
-assert.equal(Object.keys(collection.tab_exile.subItems).length, 3);
+assert.equal(Object.keys(collection.sudden_cat.subItems).length, 9);
+assert.equal(Object.keys(collection.tab_exile.subItems).length, 6);
+assert.deepEqual(
+  Object.fromEntries(travelItems.map((item) => [item.id, item.interaction])),
+  {
+    forest: "leaves",
+    beach: "ripples",
+    waterfall: "ripples",
+    canyon: "dust",
+    lake: "ripples",
+    meadow: "petals"
+  }
+);
 
 const dogSelection = selectEventContent("sudden_cat", "dog", "dog-01");
 const discovery = await storage.updateEventDiscovery("sudden_cat", dogSelection);
@@ -81,37 +104,42 @@ const unseenSelection = await storage.selectContentForDraw(
   "sudden_cat",
   sequenceRandom(0, 0)
 );
-assert.equal(unseenSelection.itemId, "spinosaurus");
+assert.notEqual(unseenSelection.itemId, "dog");
 
 await storage.updateEventDiscovery("sudden_cat", unseenSelection);
-const firstCycleSelection = await storage.selectContentForDraw(
-  "sudden_cat",
-  sequenceRandom(.99, 0)
-);
-assert.equal(firstCycleSelection.itemId, "dog");
-assert.deepEqual(database.contentDrawState.sudden_cat, {
-  remainingItemIds: [],
-  lastItemId: "spinosaurus"
-});
+const firstDiscoveryCycle = new Set(["dog", unseenSelection.itemId]);
+while (firstDiscoveryCycle.size < discoveryItems.length) {
+  const selection = await storage.selectContentForDraw(
+    "sudden_cat",
+    sequenceRandom(0, 0)
+  );
+  assert.equal(firstDiscoveryCycle.has(selection.itemId), false);
+  firstDiscoveryCycle.add(selection.itemId);
+  await storage.updateEventDiscovery("sudden_cat", selection);
+}
 
-await storage.updateEventDiscovery("sudden_cat", firstCycleSelection);
-assert.deepEqual(database.contentDrawState.sudden_cat, {
-  remainingItemIds: ["spinosaurus"],
-  lastItemId: "dog"
-});
+const completedDiscoveryCycle = [];
+while (completedDiscoveryCycle.length < discoveryItems.length) {
+  const selection = await storage.selectContentForDraw(
+    "sudden_cat",
+    sequenceRandom(completedDiscoveryCycle.length === 0 ? .99 : 0, 0)
+  );
+  assert.equal(completedDiscoveryCycle.includes(selection.itemId), false);
+  completedDiscoveryCycle.push(selection.itemId);
+  await storage.updateEventDiscovery("sudden_cat", selection);
+}
 
-const secondCycleSelection = await storage.selectContentForDraw(
-  "sudden_cat",
-  sequenceRandom(0, 0)
+assert.equal(database.contentDrawState.sudden_cat.remainingItemIds.length, 0);
+assert.equal(
+  database.contentDrawState.sudden_cat.lastItemId,
+  completedDiscoveryCycle.at(-1)
 );
-assert.equal(secondCycleSelection.itemId, "spinosaurus");
-await storage.updateEventDiscovery("sudden_cat", secondCycleSelection);
 
 const cycleBoundarySelection = await storage.selectContentForDraw(
   "sudden_cat",
   sequenceRandom(.99, 0)
 );
-assert.equal(cycleBoundarySelection.itemId, "dog");
+assert.notEqual(cycleBoundarySelection.itemId, completedDiscoveryCycle.at(-1));
 
 database.contentDrawState.tab_exile = {
   remainingItemIds: ["beach"],
@@ -144,10 +172,10 @@ assert.deepEqual(
 );
 
 const travelCycle = [];
-for (const random of [0, .99, 0]) {
+for (let index = 0; index < travelItems.length; index += 1) {
   const selection = await storage.selectContentForDraw(
     "tab_exile",
-    sequenceRandom(random, 0)
+    sequenceRandom(index % 2 === 0 ? 0 : .99, 0)
   );
   travelCycle.push(selection.itemId);
   await storage.updateEventDiscovery("tab_exile", selection);
@@ -155,7 +183,7 @@ for (const random of [0, .99, 0]) {
 
 assert.equal(
   new Set(travelCycle).size,
-  3,
+  travelItems.length,
   "all travel scenes should appear once before the cycle refills"
 );
 
@@ -172,7 +200,7 @@ assert.notEqual(
 collection = await storage.getCollectionData();
 
 assert.equal(collection.tab_exile.subItems.waterfall.discovered, true);
-assert.equal(getEventContentItems("tab_exile").length, 3);
+assert.equal(getEventContentItems("tab_exile").length, 6);
 
 const expectedRarityCounts = {
   Common: 5,
@@ -211,29 +239,21 @@ const beachSelection = selectEventContent(
   "tab_exile",
   null,
   null,
-  sequenceRandom(.34, 0)
+  sequenceRandom(.2, 0)
 );
 assert.equal(spinosaurusSelection.itemId, "spinosaurus");
 assert.equal(beachSelection.itemId, "beach");
-assert.equal(formatProbabilityLabel(EVENTS.find((event) => event.id === "sudden_cat").probability / 2), "5.0%");
-assert.equal(formatProbabilityLabel(EVENTS.find((event) => event.id === "tab_exile").probability / 3), "1.67%");
+assert.equal(formatProbabilityLabel(EVENTS.find((event) => event.id === "sudden_cat").probability / 9), "1.11%");
+assert.equal(formatProbabilityLabel(EVENTS.find((event) => event.id === "tab_exile").probability / 6), "0.83%");
 
 const suddenCatProbability = EVENTS.find((event) => event.id === "sudden_cat").probability;
 const tabExileProbability = EVENTS.find((event) => event.id === "tab_exile").probability;
-const partialDiscovery = {
-  dog: { discovered: true },
-  spinosaurus: { discovered: false }
-};
-const partialTravelDiscovery = {
-  forest: { discovered: true },
-  beach: { discovered: false },
-  waterfall: { discovered: false }
-};
-const completeTravelDiscovery = {
-  forest: { discovered: true },
-  beach: { discovered: true },
-  waterfall: { discovered: true }
-};
+const partialDiscovery = createSubItemState("sudden_cat", ["dog"]);
+const partialTravelDiscovery = createSubItemState("tab_exile", ["forest"]);
+const completeTravelDiscovery = createSubItemState(
+  "tab_exile",
+  travelItems.map((item) => item.id)
+);
 
 assert.equal(
   formatProbabilityLabel(getContentItemProbability(
@@ -253,7 +273,7 @@ assert.equal(
     partialDiscovery,
     true
   )),
-  "10.0%"
+  "1.25%"
 );
 assert.equal(
   formatProbabilityLabel(getContentItemProbability(
@@ -263,7 +283,7 @@ assert.equal(
     partialTravelDiscovery,
     true
   )),
-  "2.5%"
+  "1.0%"
 );
 assert.equal(
   formatProbabilityLabel(getContentItemProbability(
@@ -273,7 +293,7 @@ assert.equal(
     partialTravelDiscovery,
     false
   )),
-  "1.67%"
+  "0.83%"
 );
 assert.equal(
   formatProbabilityLabel(getContentItemProbability(
@@ -283,7 +303,7 @@ assert.equal(
     completeTravelDiscovery,
     true
   )),
-  "1.67%"
+  "0.83%"
 );
 
 for (const eventId of ["sudden_cat", "tab_exile"]) {
@@ -293,5 +313,25 @@ for (const eventId of ["sudden_cat", "tab_exile"]) {
     }
   }
 }
+
+const registeredDiscoveryFiles = discoveryItems
+  .flatMap((item) => item.assets)
+  .map((asset) => asset.path.split("/").at(-1))
+  .sort();
+const registeredSceneFiles = travelItems
+  .flatMap((item) => item.assets)
+  .map((asset) => asset.path.split("/").at(-1))
+  .sort();
+
+assert.deepEqual(
+  registeredDiscoveryFiles,
+  (await readdir(new URL("../assets/images/discoveries/", import.meta.url))).sort(),
+  "all discovery images should be registered"
+);
+assert.deepEqual(
+  registeredSceneFiles,
+  (await readdir(new URL("../assets/images/scenes/", import.meta.url))).sort(),
+  "all travel scenes should be registered"
+);
 
 console.log("content and storage tests passed");
