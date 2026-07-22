@@ -170,6 +170,8 @@ assert.deepEqual(
   {},
   "debug unlock should reset subitem draw cycles"
 );
+assert.equal(database.collection.sudden_cat.count, discoveryItems.length);
+assert.equal(database.collection.tab_exile.count, travelItems.length);
 
 const travelCycle = [];
 for (let index = 0; index < travelItems.length; index += 1) {
@@ -201,6 +203,13 @@ collection = await storage.getCollectionData();
 
 assert.equal(collection.tab_exile.subItems.waterfall.discovered, true);
 assert.equal(getEventContentItems("tab_exile").length, 6);
+for (const eventId of ["sudden_cat", "tab_exile"]) {
+  const subItemCount = Object.values(collection[eventId].subItems).reduce(
+    (sum, subItem) => sum + subItem.count,
+    0
+  );
+  assert.equal(collection[eventId].count, subItemCount);
+}
 
 const expectedRarityCounts = {
   Common: 5,
@@ -304,6 +313,21 @@ assert.equal(
     true
   )),
   "0.83%"
+);
+
+database.collection.sudden_cat = {
+  discovered: true,
+  count: 4,
+  subItems: {
+    dog: { discovered: true, count: 3 },
+    spinosaurus: { discovered: true, count: 2 }
+  }
+};
+const repairedCollection = await storage.getCollectionData();
+assert.equal(
+  repairedCollection.sudden_cat.count,
+  5,
+  "content event counts should be repaired from their subitem total"
 );
 
 for (const eventId of ["sudden_cat", "tab_exile"]) {

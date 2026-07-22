@@ -41,6 +41,7 @@ const elements = {
 
 let collection = {};
 let contentNoRepeatPreferences = {};
+const expandedContentEvents = new Set();
 const pageParams = new URLSearchParams(location.search);
 let replayTargetTabId = Number(pageParams.get("targetTabId")) || null;
 
@@ -102,6 +103,13 @@ function createDevUnlockedCollection(collectionData) {
         };
         return subItems;
       }, {});
+      result[event.id].count = Math.max(
+        result[event.id].count,
+        Object.values(result[event.id].subItems).reduce(
+          (sum, subItem) => sum + (subItem.count || 0),
+          0
+        )
+      );
     }
 
     return result;
@@ -144,6 +152,7 @@ function createContentItemList(event, entry) {
   const discoveredCount = content.items.filter(
     (item) => entry?.subItems?.[item.id]?.discovered
   ).length;
+  const isExpanded = expandedContentEvents.has(event.id);
   const container = document.createElement("div");
   container.className = "content-item-list";
   container.setAttribute("aria-label", `${event.name} 종류`);
@@ -153,6 +162,30 @@ function createContentItemList(event, entry) {
   const headingLabel = document.createElement("div");
   headingLabel.className = "content-item-heading-label";
   headingLabel.innerHTML = `<strong>종류</strong><span>${discoveredCount} / ${content.items.length}</span>`;
+
+  const listToggle = document.createElement("button");
+  const contentBodyId = `content-items-${event.id}`;
+  listToggle.className = "content-list-toggle";
+  listToggle.type = "button";
+  listToggle.dataset.contentListToggle = "";
+  listToggle.dataset.eventId = event.id;
+  listToggle.setAttribute("aria-controls", contentBodyId);
+  listToggle.setAttribute("aria-expanded", String(isExpanded));
+  listToggle.setAttribute(
+    "aria-label",
+    `${event.name} 종류 ${isExpanded ? "접기" : "펼쳐 보기"}`
+  );
+  listToggle.textContent = isExpanded ? "접기" : "펼쳐 보기";
+  heading.append(headingLabel, listToggle);
+  container.append(heading);
+
+  const contentBody = document.createElement("div");
+  contentBody.className = "content-item-body";
+  contentBody.id = contentBodyId;
+  contentBody.hidden = !isExpanded;
+
+  const options = document.createElement("div");
+  options.className = "content-item-options";
 
   const preference = document.createElement("label");
   preference.className = "theme-toggle content-item-preference";
@@ -172,8 +205,8 @@ function createContentItemList(event, entry) {
   preferenceControl.className = "theme-toggle-control";
   preferenceControl.setAttribute("aria-hidden", "true");
   preference.append(preferenceText, preferenceInput, preferenceControl);
-  heading.append(headingLabel, preference);
-  container.append(heading);
+  options.append(preference);
+  contentBody.append(options);
 
   content.items.forEach((item) => {
     const subItemEntry = entry?.subItems?.[item.id];
@@ -225,8 +258,10 @@ function createContentItemList(event, entry) {
     replayButton.setAttribute("aria-label", `${isDiscovered ? item.name : "아직 미발견"} 다시 보기`);
 
     row.append(preview, detail, replayButton);
-    container.append(row);
+    contentBody.append(row);
   });
+
+  container.append(contentBody);
 
   return container;
 }
@@ -368,6 +403,30 @@ function bindEvents() {
   });
 
   elements.eventSections.addEventListener("click", (event) => {
+    const contentListToggle = event.target.closest("[data-content-list-toggle]");
+    if (contentListToggle) {
+      const eventId = contentListToggle.dataset.eventId;
+      const contentBody = document.getElementById(
+        contentListToggle.getAttribute("aria-controls")
+      );
+      const isExpanded = contentListToggle.getAttribute("aria-expanded") !== "true";
+
+      contentListToggle.setAttribute("aria-expanded", String(isExpanded));
+      contentListToggle.setAttribute(
+        "aria-label",
+        `${getEventById(eventId)?.name || "하위 현상"} 종류 ${isExpanded ? "접기" : "펼쳐 보기"}`
+      );
+      contentListToggle.textContent = isExpanded ? "접기" : "펼쳐 보기";
+      if (contentBody) contentBody.hidden = !isExpanded;
+
+      if (isExpanded) {
+        expandedContentEvents.add(eventId);
+      } else {
+        expandedContentEvents.delete(eventId);
+      }
+      return;
+    }
+
     const button = event.target.closest(".replay-button, .content-replay-button");
     if (!button) return;
     replayEvent(button.dataset.eventId, button.dataset.contentItemId || null);

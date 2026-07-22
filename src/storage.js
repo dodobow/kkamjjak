@@ -74,6 +74,14 @@ function normalizeCollection(rawCollection = {}) {
 
     if (getEventContentItems(event.id).length) {
       collection[event.id].subItems = normalizeSubItems(event.id, rawEntry.subItems);
+      const subItemCount = Object.values(collection[event.id].subItems).reduce(
+        (sum, subItem) => sum + (subItem.count || 0),
+        0
+      );
+      collection[event.id].count = Math.max(
+        collection[event.id].count || 0,
+        subItemCount
+      );
     }
 
     return collection;
@@ -335,6 +343,7 @@ export async function unlockAllEventsForDebug() {
         };
         return subItems;
       }, {});
+      entry.count = contentItems.length;
     }
 
     result[event.id] = entry;

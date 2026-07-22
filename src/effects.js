@@ -405,10 +405,10 @@ function runInjectedEffect(eventId, effectData) {
       }, { once: true });
       root.append(image, label);
       addStyle(`
-        #${EFFECT_ROOT_ID}.db-discovery { position: fixed; inset: 0; z-index: 2147483647; display: grid; grid-template-rows: minmax(0, 1fr) auto; place-items: center; gap: 14px; padding: min(9vh, 72px) 24px 28px; color: #fff; text-align: center; pointer-events: none; }
+        #${EFFECT_ROOT_ID}.db-discovery { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; padding: 24px; color: #fff; text-align: center; pointer-events: none; }
         #${EFFECT_ROOT_ID}.db-discovery::before { content: ""; position: absolute; inset: 0; background: rgba(9, 10, 16, .48); animation: dbDiscoveryShade 4.8s ease both; }
-        #${EFFECT_ROOT_ID}.db-discovery img { position: relative; align-self: end; width: min(72vw, 680px); height: min(68vh, 680px); object-fit: contain; filter: drop-shadow(0 20px 22px rgba(0,0,0,.42)); animation: dbDiscoveryIn 4.8s cubic-bezier(.2,.75,.2,1) both; }
-        #${EFFECT_ROOT_ID}.db-discovery span { position: relative; min-width: 10rem; padding: 10px 16px; border: 1px solid rgba(255,255,255,.28); border-radius: 6px; background: rgba(32,32,30,.94); font: 650 17px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; animation: dbDiscoveryLabel 4.8s ease both; }
+        #${EFFECT_ROOT_ID}.db-discovery img { position: relative; width: min(72vw, 680px); height: min(68vh, 680px); object-fit: contain; filter: drop-shadow(0 20px 22px rgba(0,0,0,.42)); animation: dbDiscoveryIn 4.8s cubic-bezier(.2,.75,.2,1) both; }
+        #${EFFECT_ROOT_ID}.db-discovery span { position: absolute; left: 50%; bottom: 28px; min-width: 10rem; padding: 10px 16px; border: 1px solid rgba(255,255,255,.28); border-radius: 6px; color: #fff; background: rgba(32,32,30,.94); translate: -50% 0; font: 650 17px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; animation: dbDiscoveryLabel 4.8s ease both; }
         @keyframes dbDiscoveryShade { 0%,100% { opacity: 0; } 12%,82% { opacity: 1; } }
         @keyframes dbDiscoveryIn { 0% { opacity: 0; transform: translateY(8vh) scale(.72); } 18%,78% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-2vh) scale(.96); } }
         @keyframes dbDiscoveryLabel { 0%,12%,88%,100% { opacity: 0; transform: translateY(8px); } 24%,78% { opacity: 1; transform: translateY(0); } }
