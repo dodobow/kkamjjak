@@ -1,5 +1,6 @@
 import { EVENTS } from "./constants.js";
 import { selectEventContent } from "./content.js";
+import { selectTmiEntry } from "./tmi.js";
 import { getEventById, getFriendlyExecutionError, isScriptableUrl } from "./utils.js";
 
 function getRuntimeUrl(path) {
@@ -82,6 +83,10 @@ export async function executeEvent(event, options = {}) {
     if (event.target === "tab") {
       const eventUrl = new URL(getRuntimeUrl("pages/event/index.html"));
       eventUrl.searchParams.set("eventId", event.id);
+
+      if (event.id === "meaningless_oracle") {
+        eventUrl.searchParams.set("tmiId", selectTmiEntry().id);
+      }
 
       if (contentSelection) {
         eventUrl.searchParams.set("contentItemId", contentSelection.itemId);
