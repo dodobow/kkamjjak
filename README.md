@@ -44,7 +44,7 @@
 manifest.json                 확장프로그램 설정
 AGENTS.md                     에이전트 공통 지침
 README.md                     프로젝트 안내
-docs/KANBAN.md                공유 작업 보드
+KANBAN.md                     공유 작업 보드
 .agents/skills/               프로젝트 전용 에이전트 skill
 pages/popup/                  확장프로그램 팝업 화면
 pages/collection/             도감 화면
@@ -159,4 +159,4 @@ export const DEV_SHOW_DEBUG_TOOLS = true;
 
 ## 작업 보드
 
-남은 작업과 우선순위는 [`docs/KANBAN.md`](docs/KANBAN.md)에서 관리합니다.
+남은 작업과 우선순위는 [`KANBAN.md`](KANBAN.md)에서 관리합니다.
