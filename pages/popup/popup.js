@@ -4,10 +4,10 @@ import {
   COOLDOWN_ALARM_NAME,
   COOLDOWN_MS,
   EVENTS
-} from "./src/constants.js";
-import { getEventContentItem } from "./src/content.js";
-import { executeEvent } from "./src/effects.js";
-import { initTheme } from "./src/theme.js";
+} from "../../src/constants.js";
+import { getEventContentItem } from "../../src/content.js";
+import { executeEvent } from "../../src/effects.js";
+import { initTheme } from "../../src/theme.js";
 import {
   getCategoryStats,
   getEventById,
@@ -15,7 +15,7 @@ import {
   formatTimestamp,
   isScriptableUrl,
   pickWeightedEvent
-} from "./src/utils.js";
+} from "../../src/utils.js";
 import {
   getCooldownData,
   selectContentForDraw,
@@ -24,7 +24,7 @@ import {
   setCooldown,
   setLastResult,
   updateEventDiscovery
-} from "./src/storage.js";
+} from "../../src/storage.js";
 
 const elements = {
   appName: document.querySelector("#appName"),
@@ -190,7 +190,7 @@ async function handleMainButtonClick() {
 async function openCollection() {
   try {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    const collectionUrl = new URL(chrome.runtime.getURL("collection.html"));
+    const collectionUrl = new URL(chrome.runtime.getURL("pages/collection/index.html"));
 
     if (activeTab?.id && isScriptableUrl(activeTab.url)) {
       collectionUrl.searchParams.set("targetTabId", String(activeTab.id));
@@ -202,7 +202,7 @@ async function openCollection() {
   } catch (error) {
     console.error("open collection failed", error);
     chrome.tabs.create({
-      url: chrome.runtime.getURL("collection.html")
+      url: chrome.runtime.getURL("pages/collection/index.html")
     });
   }
 }

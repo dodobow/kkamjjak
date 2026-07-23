@@ -41,29 +41,26 @@
 ## 파일 구조
 
 ```txt
-manifest.json
-styles/tokens.css
-popup.html / popup.css / popup.js
-collection.html / collection.css / collection.js
-event-page.html / event-page.css / event-page.js
-background.js
-src/constants.js
-src/content.js
-src/storage.js
-src/effects.js
-src/theme-init.js / src/theme.js
-src/content-preference.js
-src/utils.js
-assets/images/discoveries/
-assets/images/scenes/
-assets/icons/icon16.png
-assets/icons/icon48.png
-assets/icons/icon128.png
+manifest.json                 확장프로그램 설정
+AGENTS.md                     에이전트 공통 지침
+README.md                     프로젝트 안내
+docs/KANBAN.md                공유 작업 보드
+.agents/skills/               프로젝트 전용 에이전트 skill
+pages/popup/                  확장프로그램 팝업 화면
+pages/collection/             도감 화면
+pages/event/                  새 탭 현상 화면
+src/background.js             확장프로그램 service worker
+src/                          공통 기능과 데이터 모듈
+styles/tokens.css             공통 디자인 토큰
+assets/icons/                 확장프로그램 아이콘
+assets/images/discoveries/    발견 이미지
+assets/images/scenes/         랜선 여행 이미지
+tests/                        Node 기반 자동 테스트
 ```
 
 ## 쿨타임 정책
 
-메인 버튼은 기본 1시간 쿨타임을 가집니다. 쿨타임은 `chrome.storage.local`에 `nextAvailableAt`으로 저장되고, `chrome.alarms`로 종료 알림을 예약합니다. 알림은 `background.js`의 service worker에서 `chrome.notifications.create()`로 표시합니다.
+메인 버튼은 기본 1시간 쿨타임을 가집니다. 쿨타임은 `chrome.storage.local`에 `nextAvailableAt`으로 저장되고, `chrome.alarms`로 종료 알림을 예약합니다. 알림은 `src/background.js`의 service worker에서 `chrome.notifications.create()`로 표시합니다.
 
 개발 중에는 `src/constants.js`의 아래 값을 10초로 바꾸면 테스트가 쉽습니다.
 
@@ -71,7 +68,7 @@ assets/icons/icon128.png
 export const COOLDOWN_MS = 10 * 1000;
 ```
 
-16개 이벤트를 모두 확률로 뽑아 확인하지 않아도 됩니다. 도감 페이지를 `collection.html?debug=1`로 열면 숨겨진 개발자 테스트 패널이 나타나며, 모든 현상 해금 저장, 도감 초기화, 쿨타임 초기화를 실행할 수 있습니다.
+16개 이벤트를 모두 확률로 뽑아 확인하지 않아도 됩니다. 도감 페이지를 `pages/collection/index.html?debug=1`로 열면 숨겨진 개발자 테스트 패널이 나타나며, 모든 현상 해금 저장, 도감 초기화, 쿨타임 초기화를 실행할 수 있습니다.
 
 도감에서 `다시 보기`로 페이지 효과를 확인하려면 일반 웹페이지에서 확장프로그램 팝업을 열고 `도감 보기`를 눌러야 합니다. 이때 팝업이 원래 웹 탭의 `targetTabId`를 도감에 넘기므로, 도감 탭이 `chrome-extension://` 또는 `whale-extension://` 주소여도 다시 재생 시 원래 웹 탭으로 자동 전환한 뒤 효과를 보여줍니다.
 
@@ -158,12 +155,8 @@ export const DEV_SHOW_DEBUG_TOOLS = true;
 - 외부 URL의 이미지, 사운드, CDN을 사용하지 마세요.
 - 페이지 DOM을 영구적으로 삭제하지 마세요.
 - 이벤트는 몇 초 후 정리되도록 유지하세요.
-- 새 탭 이벤트는 반드시 `event-page.html` 같은 확장프로그램 내부 페이지를 열어야 합니다.
+- 새 탭 이벤트는 반드시 `pages/event/index.html` 같은 확장프로그램 내부 페이지를 열어야 합니다.
 
-## 향후 개선 아이디어
+## 작업 보드
 
-- 이벤트별 전용 사운드 패턴 추가
-- 도감 검색
-- 희귀도별 색상 테마 강화
-- 도감 재생 전 대상 탭 선택 기능
-- 이벤트별 재생 횟수와 마지막 재생 시각 별도 저장
+남은 작업과 우선순위는 [`docs/KANBAN.md`](docs/KANBAN.md)에서 관리합니다.

@@ -1,5 +1,11 @@
 # AGENTS.md
 
+## 프로젝트 문서 위치
+
+- `AGENTS.md`: 에이전트가 자동으로 읽는 공통 지침이므로 프로젝트 루트에 유지한다.
+- `.agents/skills/`: 프로젝트 전용 skill을 모아 둔다.
+- `docs/KANBAN.md`: 사용자와 에이전트가 함께 보는 작업 보드다.
+
 ## 프로젝트 기본 규칙
 
 이 프로젝트는 순수 HTML, CSS, JavaScript 프로젝트다.

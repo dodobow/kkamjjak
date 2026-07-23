@@ -4,18 +4,18 @@ import {
   DEV_UNLOCK_ALL_EVENTS,
   EVENTS,
   formatProbabilityLabel
-} from "./src/constants.js";
+} from "../../src/constants.js";
 import {
   getContentItemProbability,
   getEventContent,
   getEventContentItems
-} from "./src/content.js";
+} from "../../src/content.js";
 import {
   CONTENT_PREFERENCE_CHANGE_EVENT,
   initContentPreference
-} from "./src/content-preference.js";
-import { executeEventById } from "./src/effects.js";
-import { initTheme } from "./src/theme.js";
+} from "../../src/content-preference.js";
+import { executeEventById } from "../../src/effects.js";
+import { initTheme } from "../../src/theme.js";
 import {
   clearCooldownForDebug,
   getContentNoRepeatPreferences,
@@ -23,14 +23,14 @@ import {
   getProgress,
   resetCollectionForDebug,
   unlockAllEventsForDebug
-} from "./src/storage.js";
+} from "../../src/storage.js";
 import {
   formatTimestamp,
   getCategoryStats,
   getEventById,
   isScriptableUrl,
   sortEventsForCollection
-} from "./src/utils.js";
+} from "../../src/utils.js";
 
 const elements = {
   title: document.querySelector("#collectionTitle"),

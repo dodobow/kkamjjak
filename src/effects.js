@@ -80,7 +80,7 @@ export async function executeEvent(event, options = {}) {
       : contentSelection;
 
     if (event.target === "tab") {
-      const eventUrl = new URL(getRuntimeUrl("event-page.html"));
+      const eventUrl = new URL(getRuntimeUrl("pages/event/index.html"));
       eventUrl.searchParams.set("eventId", event.id);
 
       if (contentSelection) {

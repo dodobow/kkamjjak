@@ -3,7 +3,7 @@ import {
   COOLDOWN_ALARM_NAME,
   NOTIFICATION_MESSAGE,
   NOTIFICATION_TITLE
-} from "./src/constants.js";
+} from "./constants.js";
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name !== COOLDOWN_ALARM_NAME) return;

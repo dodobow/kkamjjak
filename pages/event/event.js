@@ -1,7 +1,7 @@
-import { APP_NAME } from "./src/constants.js";
-import { selectEventContent } from "./src/content.js";
-import { initTheme } from "./src/theme.js";
-import { getEventById } from "./src/utils.js";
+import { APP_NAME } from "../../src/constants.js";
+import { selectEventContent } from "../../src/content.js";
+import { initTheme } from "../../src/theme.js";
+import { getEventById } from "../../src/utils.js";
 
 const params = new URLSearchParams(location.search);
 const eventId = params.get("eventId");
