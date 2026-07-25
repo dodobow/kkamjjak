@@ -7,7 +7,7 @@ export const DEV_UNLOCK_ALL_EVENTS = false;
 export const DEV_SHOW_DEBUG_TOOLS = true;
 
 export const NOTIFICATION_TITLE = "다시 열 수 있어요";
-export const NOTIFICATION_MESSAGE = "깜짝!이 다시 준비됐습니다.";
+export const NOTIFICATION_MESSAGE = "깜짝! 벌써 1시간이 지났어요!";
 
 export const STORAGE_KEYS = {
   collection: "collection",
