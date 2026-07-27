@@ -29,6 +29,17 @@ const manifest = JSON.parse(
   await readFile(path.join(rootDirectory, "manifest.json"), "utf8")
 );
 
+assert.deepEqual(
+  [...manifest.permissions].sort(),
+  ["alarms", "notifications", "scripting", "storage"],
+  "manifest permissions should stay limited to implemented features"
+);
+assert.deepEqual(
+  manifest.host_permissions,
+  ["http://*/*", "https://*/*"],
+  "host permissions should only cover scriptable web pages"
+);
+
 await assertFileExists(manifest.action.default_popup, "manifest action");
 await assertFileExists(manifest.background.service_worker, "manifest background");
 

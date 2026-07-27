@@ -44,6 +44,8 @@
 manifest.json                 확장프로그램 설정
 AGENTS.md                     에이전트 공통 지침
 README.md                     프로젝트 안내
+PRIVACY.md                    개인정보 처리방침
+LICENSE                       MIT 라이선스
 KANBAN.md                     공유 작업 보드
 .agents/skills/               프로젝트 전용 에이전트 skill
 pages/popup/                  확장프로그램 팝업 화면
@@ -140,14 +142,12 @@ export const DEV_SHOW_DEBUG_TOOLS = true;
 ## 권한 설명
 
 - `storage`: 도감, 쿨타임, 최근 결과 저장
-- `activeTab`: 사용자가 호출한 현재 탭에 이벤트 실행
-- `scripting`: 현재 탭 DOM에 안전한 일시 효과 주입
-- `tabs`: 내부 새 탭 이벤트와 도감 페이지 열기
+- `scripting`: 일반 웹페이지 DOM에 일시적인 시각 효과 주입
 - `notifications`: 쿨타임 종료 알림
 - `alarms`: 쿨타임 종료 시각 예약
-- `host_permissions` (`http://*/*`, `https://*/*`): 도감에서 일반 웹페이지 탭으로 돌아가 이벤트를 다시 재생할 수 있도록 허용
+- `host_permissions` (`http://*/*`, `https://*/*`): 일반 웹페이지에서 현상을 실행하고 도감의 다시 보기를 백그라운드 웹 탭에서 재생
 
-`<all_urls>`는 사용하지 않습니다. `chrome://`, `whale://`, Chrome Web Store, 확장프로그램 내부 페이지처럼 스크립트 주입이 불가능한 곳에서는 이벤트를 기록하지 않고 안내 메시지를 표시합니다.
+확장프로그램은 현재 탭과 재생 대상 탭이 일반 웹페이지인지 확인할 때 URL을 일시적으로 사용하지만 저장하거나 외부로 전송하지 않습니다. 페이지 내용 역시 수집하거나 전송하지 않습니다. `<all_urls>`는 사용하지 않으며, `chrome://`, `whale://`, Chrome Web Store, 확장프로그램 내부 페이지처럼 스크립트 주입이 불가능한 곳에서는 이벤트를 기록하지 않고 안내 메시지를 표시합니다.
 
 ## 개발 시 주의사항
 
@@ -160,3 +160,11 @@ export const DEV_SHOW_DEBUG_TOOLS = true;
 ## 작업 보드
 
 남은 작업과 우선순위는 [`KANBAN.md`](KANBAN.md)에서 관리합니다.
+
+## 개인정보 처리방침
+
+개인정보와 로컬 저장 데이터에 관한 내용은 [`PRIVACY.md`](PRIVACY.md)를 확인하세요.
+
+## 라이선스
+
+이 프로젝트는 [MIT License](LICENSE)로 배포됩니다.
