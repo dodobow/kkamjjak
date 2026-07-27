@@ -70,7 +70,7 @@ tests/                        Node 기반 자동 테스트
 export const COOLDOWN_MS = 10 * 1000;
 ```
 
-16개 이벤트를 모두 확률로 뽑아 확인하지 않아도 됩니다. 도감 페이지를 `pages/collection/index.html?debug=1`로 열면 숨겨진 개발자 테스트 패널이 나타나며, 모든 현상 해금 저장, 도감 초기화, 쿨타임 초기화를 실행할 수 있습니다.
+16개 이벤트를 모두 확률로 뽑아 확인하지 않아도 됩니다. `src/constants.js`의 `DEV_SHOW_DEBUG_TOOLS`를 잠시 `true`로 바꾸면 도감에 개발자 테스트 패널이 나타나며, 모든 현상 해금 저장, 도감 초기화, 쿨타임 초기화를 실행할 수 있습니다. 배포 전에는 반드시 다시 `false`로 바꿔야 합니다.
 
 도감에서 `다시 보기`로 페이지 효과를 확인하려면 일반 웹페이지에서 확장프로그램 팝업을 열고 `도감 보기`를 눌러야 합니다. 이때 팝업이 원래 웹 탭의 `targetTabId`를 도감에 넘기므로, 도감 탭이 `chrome-extension://` 또는 `whale-extension://` 주소여도 다시 재생 시 원래 웹 탭으로 자동 전환한 뒤 효과를 보여줍니다.
 
@@ -80,7 +80,7 @@ export const COOLDOWN_MS = 10 * 1000;
 export const DEV_UNLOCK_ALL_EVENTS = true;
 ```
 
-항상 디버그 패널을 보이게 하려면 아래 값을 잠시 `true`로 바꿀 수 있습니다.
+디버그 패널 설정은 아래와 같습니다.
 
 ```js
 export const DEV_SHOW_DEBUG_TOOLS = true;

@@ -1,10 +1,9 @@
 export const APP_NAME = "깜짝!";
 export const APP_DESCRIPTION = "한 시간마다 한 번씩 열어볼 수 있습니다.";
-//export const COOLDOWN_MS = 60 * 60 * 1000;
-export const COOLDOWN_MS = 1 * 1000;
+export const COOLDOWN_MS = 60 * 60 * 1000;
 export const COOLDOWN_ALARM_NAME = "dopamine_button_cooldown_ready";
 export const DEV_UNLOCK_ALL_EVENTS = false;
-export const DEV_SHOW_DEBUG_TOOLS = true;
+export const DEV_SHOW_DEBUG_TOOLS = false;
 
 export const NOTIFICATION_TITLE = "다시 열 수 있어요";
 export const NOTIFICATION_MESSAGE = "깜짝! 벌써 1시간이 지났어요!";

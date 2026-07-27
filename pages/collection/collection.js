@@ -54,7 +54,7 @@ function setStatus(message, state = "info") {
 }
 
 function shouldShowDebugTools() {
-  return DEV_SHOW_DEBUG_TOOLS || pageParams.get("debug") === "1";
+  return DEV_SHOW_DEBUG_TOOLS;
 }
 
 async function resolveReplayTargetTabId() {
