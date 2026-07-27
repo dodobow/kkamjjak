@@ -37,13 +37,37 @@ try {
     [IO.File]::Delete($outputPath)
   }
 
+  Add-Type -AssemblyName System.IO.Compression
   Add-Type -AssemblyName System.IO.Compression.FileSystem
-  [IO.Compression.ZipFile]::CreateFromDirectory(
-    $stagePath,
+  $outputArchive = [IO.Compression.ZipFile]::Open(
     $outputPath,
-    [IO.Compression.CompressionLevel]::Optimal,
-    $false
+    [IO.Compression.ZipArchiveMode]::Create
   )
+
+  try {
+    foreach ($stagedFile in Get-ChildItem -LiteralPath $stagePath -Recurse -File) {
+      $relativePath = $stagedFile.FullName.Substring($stagePath.Length).TrimStart(
+        [IO.Path]::DirectorySeparatorChar,
+        [IO.Path]::AltDirectorySeparatorChar
+      )
+      $entryName = $relativePath.Replace([IO.Path]::DirectorySeparatorChar, "/")
+      $entry = $outputArchive.CreateEntry(
+        $entryName,
+        [IO.Compression.CompressionLevel]::Optimal
+      )
+      $entryStream = $entry.Open()
+      $fileStream = [IO.File]::OpenRead($stagedFile.FullName)
+
+      try {
+        $fileStream.CopyTo($entryStream)
+      } finally {
+        $fileStream.Dispose()
+        $entryStream.Dispose()
+      }
+    }
+  } finally {
+    $outputArchive.Dispose()
+  }
 } finally {
   if (Test-Path -LiteralPath $stagePath) {
     [IO.Directory]::Delete($stagePath, $true)
@@ -55,6 +79,9 @@ try {
   $entryNames = @($archive.Entries | ForEach-Object FullName)
   if ($entryNames -notcontains "manifest.json") {
     throw "manifest.json is not at the ZIP root."
+  }
+  if ($entryNames | Where-Object { $_ -match '\\' }) {
+    throw "ZIP entries must use forward slashes."
   }
   if ($entryNames | Where-Object { $_ -match '^(docs|tests|scripts|\.agents|\.git)/' }) {
     throw "Development files were included in the release ZIP."
