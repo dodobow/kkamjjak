@@ -6,6 +6,7 @@
     <title>깜짝! 도감 스토어 캡처</title>
     <link rel="stylesheet" href="/styles/tokens.css">
     <link rel="stylesheet" href="/pages/collection/collection.css">
+    <link rel="stylesheet" href="capture.css">
     <script src="seed-data.js"></script>
     <script src="mock-extension.js"></script>
   </head>
@@ -67,6 +68,11 @@
       </div>
     </main>
 
+    <aside id="captureDiscoveryCaption" class="capture-discovery-caption" hidden>
+      <h2>오늘은 누굴 만날까?</h2>
+      <p>아직 만나지 못한 친구들도 기다리고 있습니다.</p>
+    </aside>
+
     <script type="module" src="/pages/collection/collection.js"></script>
     <script type="module">
       const view = new URLSearchParams(location.search).get("view");
@@ -84,6 +90,9 @@
             const top = section.getBoundingClientRect().top + window.scrollY - 24;
             document.documentElement.style.overflow = "hidden";
             document.body.style.transform = `translateY(-${Math.max(0, top)}px)`;
+            const caption = document.querySelector("#captureDiscoveryCaption");
+            caption.hidden = false;
+            caption.style.top = `${Math.max(0, top) + 470}px`;
           }, 300);
         }
       }, 50);

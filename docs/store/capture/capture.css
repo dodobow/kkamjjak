@@ -45,6 +45,14 @@ body {
   word-break: keep-all;
 }
 
+.capture-intro .capture-subcopy {
+  max-width: 24rem;
+  margin-top: var(--space-5);
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
 .capture-popup .popup-shell {
   width: 23rem;
   border: 1px solid var(--color-border);
@@ -71,10 +79,13 @@ body {
 }
 
 .capture-promo p {
-  margin: 0 0 var(--space-2);
+  max-width: 15rem;
+  margin: var(--space-3) 0 0;
   color: var(--color-accent);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 650;
+  line-height: 1.5;
+  word-break: keep-all;
 }
 
 .capture-promo h1 {
@@ -85,3 +96,53 @@ body {
   line-height: 1.1;
 }
 
+.capture-discovery-caption {
+  position: absolute;
+  right: 3rem;
+  width: 25rem;
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.capture-discovery-caption h2,
+.capture-scene-caption h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+.capture-discovery-caption h2 {
+  font-size: 2.5rem;
+}
+
+.capture-discovery-caption p,
+.capture-scene-caption p {
+  margin: var(--space-3) 0 0;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.capture-discovery-caption p {
+  color: var(--color-muted);
+}
+
+.capture-scene-caption {
+  position: fixed;
+  z-index: 3;
+  top: 3.5rem;
+  left: 4rem;
+  max-width: 42rem;
+  color: #242422;
+  text-shadow: 0 1px 5px rgba(255, 255, 255, 0.9);
+}
+
+.capture-scene-caption h2 {
+  font-size: 2rem;
+}
+
+.capture-scene-caption p {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
