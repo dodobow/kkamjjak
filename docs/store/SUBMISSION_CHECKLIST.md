@@ -22,7 +22,7 @@
 
 ## Chrome Web Store 입력
 
-- [ ] `dist/kamjjak-1.0.0.zip` 업로드
+- [ ] `dist/kkamjjak-1.0.0.zip` 업로드
 - [ ] 기본 언어를 한국어로 선택
 - [ ] 분류를 Fun 또는 가장 가까운 엔터테인먼트 분류로 선택
 - [ ] `docs/store/LISTING_KO.md`의 상세 설명 입력
@@ -38,7 +38,7 @@
 
 ## Whale 스토어 입력
 
-- [ ] `dist/kamjjak-1.0.0.zip` 업로드
+- [ ] `dist/kkamjjak-1.0.0.zip` 업로드
 - [ ] 언어를 한국어로 선택
 - [ ] 128px PNG 아이콘 업로드
 - [ ] 1280 x 800 스크린샷 1~4장 업로드

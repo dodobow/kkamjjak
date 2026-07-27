@@ -61,4 +61,4 @@
 
 ## 7. 문의
 
-문의와 문제 제보는 [GitHub Issues](https://github.com/dodobow/Clicker/issues)를 이용할 수 있습니다.
+문의와 문제 제보는 [GitHub Issues](https://github.com/dodobow/kkamjjak/issues)를 이용할 수 있습니다.

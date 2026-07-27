@@ -89,6 +89,6 @@ Chrome의 데이터 유형 선택 화면에서는 현재 구현 기준으로 외
 
 저장소를 Public으로 전환한 뒤 아래 주소를 사용합니다.
 
-- 홈페이지: https://github.com/dodobow/Clicker
-- 개인정보 처리방침: https://github.com/dodobow/Clicker/blob/main/PRIVACY.md
-- 지원 및 문의: https://github.com/dodobow/Clicker/issues
+- 홈페이지: https://github.com/dodobow/kkamjjak
+- 개인정보 처리방침: https://github.com/dodobow/kkamjjak/blob/main/PRIVACY.md
+- 지원 및 문의: https://github.com/dodobow/kkamjjak/issues

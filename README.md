@@ -70,7 +70,7 @@ scripts/package-extension.ps1 배포 ZIP 생성 스크립트
 .\scripts\package-extension.ps1
 ```
 
-결과물은 `dist/kamjjak-<version>.zip`에 생성됩니다. ZIP에는 실행 파일과 MIT 라이선스만 포함되며 `manifest.json`이 최상위에 위치합니다. 스토어 등록 문구와 이미지, 제출 순서는 [`docs/store/SUBMISSION_CHECKLIST.md`](docs/store/SUBMISSION_CHECKLIST.md)를 확인하세요.
+결과물은 `dist/kkamjjak-<version>.zip`에 생성됩니다. ZIP에는 실행 파일과 MIT 라이선스만 포함되며 `manifest.json`이 최상위에 위치합니다. 스토어 등록 문구와 이미지, 제출 순서는 [`docs/store/SUBMISSION_CHECKLIST.md`](docs/store/SUBMISSION_CHECKLIST.md)를 확인하세요.
 
 ## 쿨타임 정책
 

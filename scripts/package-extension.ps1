@@ -8,10 +8,10 @@ $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $manifestPath = Join-Path $projectRoot "manifest.json"
 $manifest = Get-Content -Raw -Encoding utf8 $manifestPath | ConvertFrom-Json
 $outputRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot $OutputDirectory))
-$outputPath = Join-Path $outputRoot "kamjjak-$($manifest.version).zip"
+$outputPath = Join-Path $outputRoot "kkamjjak-$($manifest.version).zip"
 $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
 $stagePath = [IO.Path]::GetFullPath(
-  (Join-Path $tempRoot "clicker-package-$([Guid]::NewGuid().ToString('N'))")
+  (Join-Path $tempRoot "kkamjjak-package-$([Guid]::NewGuid().ToString('N'))")
 )
 
 if (-not $stagePath.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase)) {
