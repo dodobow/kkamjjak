@@ -74,7 +74,7 @@ export function getCategoryStats(collectionData) {
 export function sortEventsForCollection(
   events,
   collectionData,
-  mode = "rarity-desc"
+  mode = "rarity-asc"
 ) {
   const rarityRank = (event) => RARITY_ORDER.indexOf(event.rarity);
   const discoveryRank = (event) => Number(Boolean(collectionData[event.id]?.discovered));

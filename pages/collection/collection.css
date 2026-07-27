@@ -423,12 +423,12 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 2.25rem;
-  padding: 0 var(--space-2);
-  border: 0;
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
-  color: var(--color-muted);
-  background: transparent;
+  color: var(--color-text);
+  background: var(--color-surface);
   font-size: 0.75rem;
   font-weight: 650;
 }
@@ -448,6 +448,13 @@ h1 {
 }
 
 .content-list-toggle:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.content-list-toggle[aria-expanded="true"] {
+  border-color: var(--color-accent);
   color: var(--color-accent);
   background: var(--color-accent-soft);
 }

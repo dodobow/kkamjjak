@@ -142,6 +142,12 @@ function runInjectedEffect(eventId, effectData) {
   window[STATE_KEY] = state;
 
   const randomFrom = (items) => items[Math.floor(Math.random() * items.length)];
+  const BIG_EMOJIS = [
+    "😵‍💫", "🫠", "🤯", "🥳", "😎",
+    "🤨", "🥸", "👀", "🫡", "🐸",
+    "🐙", "🦖", "🛸", "🍕", "🍀",
+    "🎁", "🪩", "✨", "🔥", "💡"
+  ];
 
   const removeExisting = () => {
     state.timers.forEach((timer) => window.clearTimeout(timer));
@@ -347,7 +353,7 @@ function runInjectedEffect(eventId, effectData) {
 
     case "giant_emoji": {
       const root = createRoot("db-giant-emoji");
-      root.textContent = randomFrom(["😵‍💫", "🫠", "🪩", "✨"]);
+      root.textContent = randomFrom(BIG_EMOJIS);
       addStyle(`
         #${EFFECT_ROOT_ID}.db-giant-emoji { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; font-size: min(34vw, 260px); pointer-events: none; animation: dbEmoji 4s ease both; filter: drop-shadow(0 28px 50px rgba(0,0,0,.38)); }
         @keyframes dbEmoji { 0% { opacity: 0; transform: scale(.1) rotate(-20deg); } 30%, 75% { opacity: 1; transform: scale(1) rotate(8deg); } 100% { opacity: 0; transform: scale(.7) rotate(20deg); } }
@@ -500,7 +506,7 @@ function runInjectedEffect(eventId, effectData) {
       }
 
       emoji.className = "db-combo-emoji";
-      emoji.textContent = randomFrom(["😵‍💫", "🫠", "🤯", "🥳"]);
+      emoji.textContent = randomFrom(BIG_EMOJIS);
       root.append(emoji);
 
       Array.from({ length: 42 }, () => {

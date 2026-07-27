@@ -43,7 +43,7 @@ const elements = {
 
 let collection = {};
 let contentNoRepeatPreferences = {};
-let collectionSortMode = "rarity-desc";
+let collectionSortMode = "rarity-asc";
 const expandedContentEvents = new Set();
 const pageParams = new URLSearchParams(location.search);
 let replayTargetTabId = Number(pageParams.get("targetTabId")) || null;

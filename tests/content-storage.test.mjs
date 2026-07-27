@@ -263,6 +263,11 @@ assert.deepEqual(
   ["spin_world", "color_doom", "snow_browser", "nothing_happened"]
 );
 assert.deepEqual(
+  sortEventsForCollection(sortableEvents, sortableCollection)
+    .map((event) => event.id),
+  ["spin_world", "color_doom", "snow_browser", "nothing_happened"]
+);
+assert.deepEqual(
   sortEventsForCollection(sortableEvents, sortableCollection, "discovered")
     .map((event) => event.id),
   ["snow_browser", "spin_world", "nothing_happened", "color_doom"]
