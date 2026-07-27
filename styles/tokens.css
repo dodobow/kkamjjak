@@ -83,20 +83,12 @@ body {
 }
 
 .brand-mark {
-  display: grid;
+  display: block;
   flex: 0 0 auto;
-  width: 1.75rem;
+  width: 2.5rem;
   aspect-ratio: 1;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--color-accent-contrast);
-  background: var(--color-accent);
-  box-shadow: var(--shadow-sm);
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 800;
-  line-height: 1;
-  transform: rotate(-6deg);
+  height: auto;
+  object-fit: contain;
 }
 
 button,
