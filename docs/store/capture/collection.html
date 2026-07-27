@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>깜짝! 도감 스토어 캡처</title>
+    <link rel="stylesheet" href="/styles/tokens.css">
+    <link rel="stylesheet" href="/pages/collection/collection.css">
+    <script src="seed-data.js"></script>
+    <script src="mock-extension.js"></script>
+  </head>
+  <body>
+    <header class="collection-header">
+      <div>
+        <p class="eyebrow">지금까지 나온 것들</p>
+        <div class="brand-heading">
+          <img class="brand-mark" src="/assets/icons/icon128.png" width="128" height="128" alt="">
+          <h1 id="collectionTitle">깜짝! 도감</h1>
+        </div>
+        <p id="collectionDescription">열어서 나온 결과를 모았습니다.</p>
+      </div>
+      <div class="header-tools">
+        <label class="theme-toggle">
+          <span>다크 모드</span>
+          <input id="themeToggle" type="checkbox" role="switch" data-theme-toggle>
+          <span class="theme-toggle-control" aria-hidden="true"></span>
+        </label>
+        <div class="summary">
+          <strong id="totalProgress">0 / 16</strong>
+          <span>발견</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="collection-layout">
+      <aside class="stats-panel">
+        <h2>카테고리</h2>
+        <div id="categoryStats"></div>
+        <p id="statusText" class="status-text" role="status" aria-live="polite"></p>
+      </aside>
+
+      <div class="collection-content">
+        <div class="collection-toolbar">
+          <div class="sort-control" role="radiogroup" aria-labelledby="collectionSortLabel">
+            <span id="collectionSortLabel" class="sort-label">정렬</span>
+            <div id="collectionSortOptions" class="sort-options">
+              <label class="sort-option">
+                <input type="radio" name="collectionSort" value="rarity-asc" checked>
+                <span>낮은 레어도</span>
+              </label>
+              <label class="sort-option">
+                <input type="radio" name="collectionSort" value="rarity-desc">
+                <span>높은 레어도</span>
+              </label>
+              <label class="sort-option">
+                <input type="radio" name="collectionSort" value="discovered">
+                <span>발견 먼저</span>
+              </label>
+              <label class="sort-option">
+                <input type="radio" name="collectionSort" value="undiscovered">
+                <span>미발견 먼저</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <section id="eventSections" class="event-sections" aria-label="깜짝! 도감"></section>
+      </div>
+    </main>
+
+    <script type="module" src="/pages/collection/collection.js"></script>
+    <script type="module">
+      const view = new URLSearchParams(location.search).get("view");
+      const waitForContent = setInterval(() => {
+        const imageHeading = [...document.querySelectorAll(".category-heading h2")]
+          .find((heading) => heading.textContent === "이미지");
+        if (!imageHeading) return;
+
+        clearInterval(waitForContent);
+        if (view === "discoveries") {
+          const section = imageHeading.closest(".category-section");
+          section.querySelector("[data-content-list-toggle]")?.click();
+          document.documentElement.style.scrollBehavior = "auto";
+          setTimeout(() => {
+            const top = section.getBoundingClientRect().top + window.scrollY - 24;
+            document.documentElement.style.overflow = "hidden";
+            document.body.style.transform = `translateY(-${Math.max(0, top)}px)`;
+          }, 300);
+        }
+      }, 50);
+    </script>
+  </body>
+</html>

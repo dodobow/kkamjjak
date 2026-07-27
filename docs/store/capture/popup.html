@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>깜짝! 스토어 팝업 캡처</title>
+    <link rel="stylesheet" href="/styles/tokens.css">
+    <link rel="stylesheet" href="/pages/popup/popup.css">
+    <link rel="stylesheet" href="capture.css">
+    <script src="seed-data.js"></script>
+    <script src="mock-extension.js"></script>
+  </head>
+  <body class="capture-popup">
+    <section class="capture-intro" aria-label="깜짝! 소개">
+      <img src="/assets/icons/icon128.png" width="128" height="128" alt="">
+      <p>한 시간마다 한 번</p>
+      <h2>뭐가 나올지는 열어봐야 압니다.</h2>
+    </section>
+
+    <main class="popup-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">한 시간마다 한 번</p>
+          <div class="brand-heading">
+            <img class="brand-mark" src="/assets/icons/icon128.png" width="128" height="128" alt="">
+            <h1 id="appName">깜짝!</h1>
+          </div>
+        </div>
+        <label class="theme-toggle">
+          <span>다크 모드</span>
+          <input id="themeToggle" type="checkbox" role="switch" data-theme-toggle>
+          <span class="theme-toggle-control" aria-hidden="true"></span>
+        </label>
+      </header>
+
+      <p id="appDescription" class="description">한 시간마다 한 번씩 열어볼 수 있습니다.</p>
+
+      <section class="button-zone" aria-label="메인 버튼">
+        <button id="mainButton" class="primary-button" type="button">열어보기</button>
+        <p id="cooldownText" class="cooldown-text">지금 열 수 있어요</p>
+        <p id="statusText" class="status-text" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="progress-panel" aria-label="수집 진행률">
+        <div class="progress-head">
+          <span>수집 진행률</span>
+          <strong id="progressText">0 / 16 발견</strong>
+        </div>
+        <div class="progress-track" role="progressbar" aria-label="수집 진행률" aria-valuemin="0" aria-valuemax="16" aria-valuenow="0">
+          <span id="progressFill"></span>
+        </div>
+        <div id="categoryProgress" class="category-progress"></div>
+      </section>
+
+      <section class="last-result" aria-label="최근 결과">
+        <p class="section-label">최근 결과</p>
+        <div id="lastResultText" class="last-result-box" data-state="empty">아직 나온 결과가 없습니다.</div>
+      </section>
+
+      <button id="openCollectionButton" class="secondary-button" type="button">도감 보기</button>
+    </main>
+
+    <script type="module" src="/pages/popup/popup.js"></script>
+  </body>
+</html>
+

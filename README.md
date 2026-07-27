@@ -58,7 +58,19 @@ assets/icons/                 확장프로그램 아이콘
 assets/images/discoveries/    발견 이미지
 assets/images/scenes/         랜선 여행 이미지
 tests/                        Node 기반 자동 테스트
+docs/store/                   스토어 등록 문구, 체크리스트와 그래픽 자료
+scripts/package-extension.ps1 배포 ZIP 생성 스크립트
 ```
+
+## 배포 패키지
+
+스토어 업로드용 ZIP은 프로젝트 루트에서 아래 명령으로 생성합니다.
+
+```powershell
+.\scripts\package-extension.ps1
+```
+
+결과물은 `dist/kamjjak-<version>.zip`에 생성됩니다. ZIP에는 실행 파일과 MIT 라이선스만 포함되며 `manifest.json`이 최상위에 위치합니다. 스토어 등록 문구와 이미지, 제출 순서는 [`docs/store/SUBMISSION_CHECKLIST.md`](docs/store/SUBMISSION_CHECKLIST.md)를 확인하세요.
 
 ## 쿨타임 정책
 
