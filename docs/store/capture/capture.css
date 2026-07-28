@@ -146,3 +146,233 @@ body {
   font-size: 0.9375rem;
   font-weight: 600;
 }
+
+.capture-pin {
+  width: 1280px;
+  height: 800px;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.pin-guide {
+  display: grid;
+  grid-template-columns: 24rem minmax(0, 1fr);
+  align-items: center;
+  gap: 5.5rem;
+  width: 100%;
+  height: 100%;
+  padding: 4.5rem 5rem;
+}
+
+.pin-guide-copy > img {
+  display: block;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: var(--space-6);
+}
+
+.pin-guide-eyebrow {
+  margin: 0 0 var(--space-3);
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.pin-guide-copy h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+.pin-guide-description {
+  margin: var(--space-5) 0 0;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.pin-guide-steps {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-8) 0 0;
+  padding: var(--space-6) 0 0;
+  border-top: 1px solid var(--color-border);
+  list-style: none;
+}
+
+.pin-guide-steps li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.pin-guide-steps span {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  color: var(--color-accent);
+  font-size: 0.8125rem;
+}
+
+.browser-pin-demo {
+  position: relative;
+  align-self: center;
+  min-height: 31rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.browser-toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5);
+  height: 5.25rem;
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-subtle);
+}
+
+.browser-controls {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.browser-controls span {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.browser-address {
+  height: 2.75rem;
+  padding: 0.72rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  background: var(--color-bg);
+  font-size: 0.875rem;
+}
+
+.browser-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.toolbar-app,
+.extension-trigger {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.toolbar-app {
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.toolbar-app img {
+  width: 2rem;
+  height: 2rem;
+}
+
+.extension-trigger {
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.extension-trigger svg,
+.pin-action svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.extension-menu {
+  width: 31rem;
+  margin: 3.25rem auto 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.extension-menu-head {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.extension-menu-head div,
+.extension-row-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.extension-menu-head strong {
+  font-size: 1rem;
+}
+
+.extension-menu-head span,
+.extension-row-copy span,
+.extension-menu-note {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.extension-row {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+}
+
+.extension-row > img {
+  width: 3rem;
+  height: 3rem;
+}
+
+.extension-row-copy strong {
+  font-size: 1rem;
+}
+
+.pin-action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 5.5rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  color: var(--color-accent-depth);
+  background: var(--color-accent-soft);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.extension-menu-note {
+  margin: 0;
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border);
+  line-height: 1.6;
+}

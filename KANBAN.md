@@ -40,6 +40,7 @@ _현재 막힌 작업 없음._
 
 ## Recently Done
 
+- [x] `P1-11` README 간소화 및 확장 프로그램 고정 안내 이미지 추가
 - [x] `P1-08` Chrome·Whale 스토어 등록 및 심사 요청
   - Chrome Web Store 심사 중, Whale 스토어 출시 완료
 - [x] `P1-10` README를 사용자·개발자용 소개 페이지로 개편
