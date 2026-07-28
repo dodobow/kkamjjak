@@ -376,3 +376,27 @@ body {
   border-top: 1px solid var(--color-border);
   line-height: 1.6;
 }
+
+.whale-pin-demo {
+  align-self: center;
+  margin: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: #252525;
+  box-shadow: var(--shadow-sm);
+}
+
+.whale-pin-demo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.whale-pin-demo figcaption {
+  margin-top: var(--space-4);
+  color: #d8d8d4;
+  font-size: 0.8125rem;
+  text-align: right;
+}
