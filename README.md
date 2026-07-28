@@ -8,6 +8,12 @@
   <img src="docs/store/assets/promo/small-promo-440x280.png" width="440" alt="깜짝! 한 시간에 한 번 만나보는 재밌는 현상들">
 </p>
 
+<p align="center">
+  <a href="https://store.whale.naver.com/detail/aghpecclnadohkhpedofhnckjmchbpeb">
+    <img src="docs/store/assets/badges/whale-store-badge.png" width="280" alt="Whale 스토어에서 깜짝! 설치하기">
+  </a>
+</p>
+
 ## 주요 기능
 
 - 한 시간마다 한 번 누를 수 있는 랜덤 버튼

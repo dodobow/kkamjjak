@@ -47,6 +47,7 @@ _현재 막힌 작업 없음._
 
 ## Recently Done
 
+- [x] `P1-13` README에 Whale 스토어 설치 배지와 바로가기 추가
 - [x] `P1-12` Whale 실제 UI로 확장 프로그램 고정 안내 이미지 교체
 - [x] `P1-11` README 간소화 및 확장 프로그램 고정 안내 이미지 추가
 - [x] `P1-08` Chrome·Whale 스토어 등록 및 심사 요청
