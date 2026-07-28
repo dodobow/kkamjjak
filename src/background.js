@@ -2,11 +2,45 @@ import {
   APP_NAME,
   COOLDOWN_ALARM_NAME,
   NOTIFICATION_MESSAGE,
-  NOTIFICATION_TITLE
+  NOTIFICATION_TITLE,
+  STORAGE_KEYS
 } from "./constants.js";
+import { getActionState } from "./action-state.js";
+import { getCooldownData } from "./storage.js";
+
+function logActionError(action) {
+  const error = chrome.runtime.lastError;
+  if (error) {
+    console.error(`${action} failed`, error);
+  }
+}
+
+function applyActionState(nextAvailableAt) {
+  const state = getActionState(nextAvailableAt);
+
+  chrome.action.setIcon({ path: state.iconPath }, () => {
+    logActionError("action icon update");
+  });
+  chrome.action.setTitle({ title: state.title }, () => {
+    logActionError("action title update");
+  });
+}
+
+async function syncActionState(nextAvailableAt) {
+  try {
+    const cooldownEnd = Number.isFinite(nextAvailableAt)
+      ? nextAvailableAt
+      : (await getCooldownData()).nextAvailableAt;
+    applyActionState(cooldownEnd);
+  } catch (error) {
+    console.error("action state sync failed", error);
+  }
+}
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name !== COOLDOWN_ALARM_NAME) return;
+
+  applyActionState(0);
 
   chrome.notifications.create(
     {
@@ -27,4 +61,18 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 chrome.runtime.onInstalled.addListener(() => {
   console.info(`${APP_NAME} extension installed.`);
+  void syncActionState();
 });
+
+chrome.runtime.onStartup.addListener(() => {
+  void syncActionState();
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "local" || !changes[STORAGE_KEYS.cooldown]) return;
+
+  const nextAvailableAt = changes[STORAGE_KEYS.cooldown].newValue?.nextAvailableAt;
+  void syncActionState(nextAvailableAt);
+});
+
+void syncActionState();
