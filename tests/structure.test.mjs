@@ -34,7 +34,7 @@ const {
   DEV_UNLOCK_ALL_EVENTS
 } = await import("../src/constants.js");
 
-assert.equal(manifest.version, "1.0.0", "release version should be 1.0.0");
+assert.equal(manifest.version, "1.0.1", "release version should be 1.0.1");
 assert.equal(COOLDOWN_MS, 60 * 60 * 1000, "release cooldown should be one hour");
 assert.equal(DEV_SHOW_DEBUG_TOOLS, false, "debug tools should be disabled in release");
 assert.equal(DEV_UNLOCK_ALL_EVENTS, false, "dev unlock should be disabled in release");
