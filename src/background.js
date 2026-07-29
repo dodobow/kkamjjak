@@ -18,7 +18,9 @@ function logActionError(action) {
 function applyActionState(nextAvailableAt) {
   const state = getActionState(nextAvailableAt);
 
-  chrome.action.setIcon({ path: state.iconPath }, () => {
+  const iconUrl = chrome.runtime.getURL(state.iconPath);
+
+  chrome.action.setIcon({ path: iconUrl }, () => {
     logActionError("action icon update");
   });
   chrome.action.setTitle({ title: state.title }, () => {
