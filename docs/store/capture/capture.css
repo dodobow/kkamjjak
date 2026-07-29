@@ -377,7 +377,8 @@ body {
   line-height: 1.6;
 }
 
-.whale-pin-demo {
+.whale-pin-demo,
+.chrome-pin-demo {
   align-self: center;
   margin: 0;
   padding: var(--space-5);
@@ -387,14 +388,16 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.whale-pin-demo img {
+.whale-pin-demo img,
+.chrome-pin-demo img {
   display: block;
   width: 100%;
   height: auto;
   border-radius: var(--radius-sm);
 }
 
-.whale-pin-demo figcaption {
+.whale-pin-demo figcaption,
+.chrome-pin-demo figcaption {
   margin-top: var(--space-4);
   color: #d8d8d4;
   font-size: 0.8125rem;
