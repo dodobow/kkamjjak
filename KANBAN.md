@@ -47,6 +47,7 @@ _현재 막힌 작업 없음._
 
 ## Recently Done
 
+- [x] `P1-15` Whale·Chrome 스토어 배지 규격과 가독성 통일
 - [x] `P1-14` README에 Chrome 웹 스토어 공식 배지와 바로가기 추가
 - [x] `P1-13` README에 Whale 스토어 설치 배지와 바로가기 추가
 - [x] `P1-12` Whale 실제 UI로 확장 프로그램 고정 안내 이미지 교체
