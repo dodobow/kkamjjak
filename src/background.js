@@ -8,10 +8,10 @@ import {
 import { getActionState } from "./action-state.js";
 import { getCooldownData } from "./storage.js";
 
-function logActionError(action) {
+function logRuntimeError(action) {
   const error = chrome.runtime.lastError;
   if (error) {
-    console.error(`${action} failed`, error);
+    console.error(`${action} failed: ${error.message}`);
   }
 }
 
@@ -21,10 +21,10 @@ function applyActionState(nextAvailableAt) {
   const iconUrl = chrome.runtime.getURL(state.iconPath);
 
   chrome.action.setIcon({ path: iconUrl }, () => {
-    logActionError("action icon update");
+    logRuntimeError("action icon update");
   });
   chrome.action.setTitle({ title: state.title }, () => {
-    logActionError("action title update");
+    logRuntimeError("action title update");
   });
 }
 
@@ -44,19 +44,18 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
   applyActionState(0);
 
+  const notificationIconUrl = chrome.runtime.getURL("assets/icons/icon128.png");
+
   chrome.notifications.create(
     {
       type: "basic",
-      iconUrl: "assets/icons/icon128.png",
+      iconUrl: notificationIconUrl,
       title: NOTIFICATION_TITLE,
       message: NOTIFICATION_MESSAGE,
       priority: 1
     },
     () => {
-      const error = chrome.runtime.lastError;
-      if (error) {
-        console.error("cooldown notification failed", error);
-      }
+      logRuntimeError("cooldown notification");
     }
   );
 });
