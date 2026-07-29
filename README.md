@@ -10,7 +10,11 @@
 
 <p align="center">
   <a href="https://store.whale.naver.com/detail/aghpecclnadohkhpedofhnckjmchbpeb">
-    <img src="docs/store/assets/badges/whale-store-badge.png" width="280" alt="Whale 스토어에서 깜짝! 설치하기">
+    <img src="docs/store/assets/badges/whale-store-badge.png" height="64" alt="Whale 스토어에서 깜짝! 설치하기">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://chromewebstore.google.com/detail/%EA%B9%9C%EC%A7%9D/dhofiheapkaabjiifoofbnnjaikbcggk">
+    <img src="docs/store/assets/badges/chrome-web-store-badge.png" height="64" alt="Chrome 웹 스토어에서 깜짝! 설치하기">
   </a>
 </p>
 

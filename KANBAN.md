@@ -47,11 +47,12 @@ _현재 막힌 작업 없음._
 
 ## Recently Done
 
+- [x] `P1-14` README에 Chrome 웹 스토어 공식 배지와 바로가기 추가
 - [x] `P1-13` README에 Whale 스토어 설치 배지와 바로가기 추가
 - [x] `P1-12` Whale 실제 UI로 확장 프로그램 고정 안내 이미지 교체
 - [x] `P1-11` README 간소화 및 확장 프로그램 고정 안내 이미지 추가
 - [x] `P1-08` Chrome·Whale 스토어 등록 및 심사 요청
-  - Chrome Web Store 심사 중, Whale 스토어 출시 완료
+  - Chrome Web Store·Whale 스토어 출시 완료
 - [x] `P1-10` README를 사용자·개발자용 소개 페이지로 개편
 - [x] `P1-09` 영문 프로젝트 이름을 `kkamjjak`으로 통일
 - [x] `P1-07` 스토어 등록 자료와 배포 패키지 준비
