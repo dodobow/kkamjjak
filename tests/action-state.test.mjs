@@ -16,12 +16,12 @@ const now = 1_000_000;
 
 const readyState = getActionState(now, now);
 assert.equal(readyState.isReady, true);
-assert.equal(readyState.iconPath, ACTION_ICON_PATHS.ready);
+assert.equal(readyState.iconPath, ACTION_ICON_PATHS.ready[48]);
 assert.equal(readyState.title, ACTION_TITLES.ready);
 
 const cooldownState = getActionState(now + 1, now);
 assert.equal(cooldownState.isReady, false);
-assert.equal(cooldownState.iconPath, ACTION_ICON_PATHS.cooldown);
+assert.equal(cooldownState.iconPath, ACTION_ICON_PATHS.cooldown[48]);
 assert.equal(cooldownState.title, ACTION_TITLES.cooldown);
 
 assert.equal(getActionState(undefined, now).isReady, true);

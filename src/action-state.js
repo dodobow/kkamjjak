@@ -22,7 +22,7 @@ export function getActionState(nextAvailableAt, now = Date.now()) {
 
   return {
     isReady: !isCoolingDown,
-    iconPath: ACTION_ICON_PATHS[state],
+    iconPath: ACTION_ICON_PATHS[state][48],
     title: ACTION_TITLES[state]
   };
 }
